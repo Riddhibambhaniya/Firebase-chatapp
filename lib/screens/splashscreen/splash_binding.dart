@@ -4,6 +4,6 @@ import 'package:project_structure_with_getx/screens/splashscreen/splash_controll
 class SplashBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(() => SplashController());
+    Get.lazyPut<SplashController>(() => SplashController());
   }
 }

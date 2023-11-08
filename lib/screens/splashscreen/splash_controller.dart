@@ -1,15 +1,16 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
+
+import '../../routes/app_routes.dart';
+import '../on bordingscreen/on bording_view.dart';
 
 class SplashController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _simulateInitialization();
-  }
-
-  Future<void> _simulateInitialization() async {
-    // Simulate some initialization process (e.g., loading data)
-    await Future.delayed(Duration(seconds: 2));
-    // You can optionally perform any post-initialization logic here
+    Future.delayed(const Duration(seconds: 3), () {
+      Get.toNamed(Routes.onboarding);
+    });
   }
 }

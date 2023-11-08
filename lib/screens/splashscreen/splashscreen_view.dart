@@ -7,7 +7,7 @@ import 'package:project_structure_with_getx/screens/splashscreen/splash_controll
 import '../../utils/imagepath.dart'; // Import the ImagePath class
 
 class SplashView extends GetView<SplashController> {
-
+  final controller = Get.find<SplashController>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(

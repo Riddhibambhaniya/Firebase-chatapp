@@ -25,22 +25,11 @@ class ColorConstants {
   static const red = Color(0xFFBC0202);
   static const green13 = Color(0xFF13B238);
   static const green00 = Color(0xFF00AA3B);
-  static const redB6 = Color(0xFFB60012);
-  static const blue11 = Color(0xFF119ED1);
-  static const blue13 = Color(0xFF13B0D4);
-  static MaterialColor appColor = const MaterialColor(
-    0xFF12B2D5,
-    <int, Color>{
-      50: Color(0xFF12B2D5),
-      100: Color(0xFF12B2D5),
-      200: Color(0xFF12B2D5),
-      300: Color(0xFF12B2D5),
-      400: Color(0xFF12B2D5),
-      500: Color(0xFF12B2D5),
-      600: Color(0xFF12B2D5),
-      700: Color(0xFF12B2D5),
-      800: Color(0xFF12B2D5),
-      900: Color(0xFF12B2D5),
-    },
-  );
+
+
+  static const darkblack = Color(0xFF000D07);
+  static const darkgreen= Color(0xFF24786D);
+  static const darkgrreen= Color(0xFF24786D);
+  static const darkgey = Color(0xFF797C7B);
+
 }
