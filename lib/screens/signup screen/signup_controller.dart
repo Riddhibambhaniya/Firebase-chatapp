@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:uuid/uuid.dart';
+
 
 class SignUpController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -72,15 +75,26 @@ class SignUpController extends GetxController {
         passwordValidation == null &&
         confirmPasswordValidation == null) {
       try {
-        await _auth.createUserWithEmailAndPassword(
+        final userCredential = await _auth.createUserWithEmailAndPassword(
           email: email.value,
           password: password.value,
+
         );
 
-        final user = _auth.currentUser;
+        final user = userCredential.user;
         final userUID = user?.uid;
 
-        // Store data in Firestore using userUID as a reference.
+        // Generate a UUID for the user
+        final userUUID = Uuid().v4();
+
+        // Store user data in Firestore with the UUID
+        await FirebaseFirestore.instance.collection('users').doc(userUID).set({
+          'name': name.value,
+          'email': email.value,
+          'uuid': userUUID,
+        });
+
+        // Now you have associated the UUID with the user in Firestore
 
         Get.toNamed('/home');
       } catch (e) {
@@ -90,4 +104,5 @@ class SignUpController extends GetxController {
       print('Form validation failed.');
     }
   }
+
 }

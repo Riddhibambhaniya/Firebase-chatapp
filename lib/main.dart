@@ -32,11 +32,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'Chat App',
-      // initialRoute: Routes.splash,
-      //
-      // getPages: AppPages.routes,
-     // initialBinding: AuthBinding(),
-       home:MyProfileView(),
+      initialRoute: Routes.splash,
+
+      getPages: AppPages.routes,
+    // initialBinding: AuthBinding(),
+      // home:MyProfileView(),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,20 +16,49 @@ class SignInController extends GetxController {
     // Your password validation logic
   }
 
+  //
+
+
+
   Future<void> signIn() async {
     if (validateEmail(email.value) == null && validatePassword(password.value) == null) {
       try {
-        await _auth.signInWithEmailAndPassword(
+        final userCredential = await _auth.signInWithEmailAndPassword(
           email: email.value,
           password: password.value,
         );
-        // Authentication successful, you can navigate to the home screen
-        Get.toNamed('/home');
+
+        if (userCredential.user != null) {
+          final userUid = userCredential.user?.uid;
+
+          if (userUid != null) {
+            // Retrieve the user's data from Firebase Firestore
+            final userDoc = await FirebaseFirestore.instance.collection('users').doc(userUid).get();
+            final userUuid = userDoc.data()?['uuid'];
+            final userName = userDoc.data()?['name'];
+            final userEmail = userDoc.data()?['email'];
+
+            // Pass the user's data to the contact list and chat page
+            Get.toNamed(
+              '/home',
+              arguments: {
+                'uuid': userUuid,
+                'name': userName,
+                'email': userEmail,
+              },
+            );
+          } else {
+            // Handle authentication errors, e.g., show an error message
+            print('Login failed: User not found');
+            Get.snackbar('Login Error', 'Failed to log in: User not found', backgroundColor: Colors.red, colorText: Colors.white);
+          }
+        }
       } catch (e) {
         // Handle authentication errors, e.g., show an error message
         print('Login failed: $e');
-        Get.snackbar('Login Error', 'Failed to log in: $e', backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar('Login Error', 'Failed to log in: $e', backgroundColor: Colors.red, colorText: Colors .white);
       }
     }
   }
+
 }

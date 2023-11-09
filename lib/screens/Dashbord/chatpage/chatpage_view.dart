@@ -8,6 +8,7 @@ import 'chatpage_controller.dart';
 
 class ChatPage extends GetView<ChatController> {
   final ChatController controller = Get.put(ChatController());
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,9 +130,4 @@ class ChatPage extends GetView<ChatController> {
 }
 
 
-class ChatMessage {
-  final String senderName;
-  final String messageContent;
 
-  ChatMessage(this.senderName, this.messageContent);
-}

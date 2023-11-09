@@ -1,6 +1,7 @@
 
 import 'package:get/get.dart';
 
+import '../../../models/chatmessage.dart';
 import 'chatpage_view.dart';
 
 class ChatController extends GetxController {
