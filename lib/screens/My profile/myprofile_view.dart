@@ -92,7 +92,8 @@ class MyProfileView extends GetView<MyProfileController> {
 
                        Padding(
                          padding: const EdgeInsets.only(left:38.0),
-                         child: Text(
+                         child:
+                         Text(
                               controller.userName.value,
                               style: appbar2,
                             ),
@@ -115,7 +116,8 @@ class MyProfileView extends GetView<MyProfileController> {
                     ),
                      Padding(
                        padding: const EdgeInsets.only(left:38.0),
-                       child: Text(
+                      child:
+                       Text(
                             controller.userEmail.value,
                             style: appbar2,
                           ),

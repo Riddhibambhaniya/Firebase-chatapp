@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:project_structure_with_getx/styles/colorconstants.dart';
 
 import '../../../styles/text_style.dart';
-
 import '../dashbord_view.dart';
 import 'chatpage_controller.dart';
 
@@ -13,10 +11,8 @@ class ChatPage extends GetView<ChatController> {
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic>? userData =
-        Get.arguments;
+    final Map<String, dynamic>? userData = Get.arguments;
     String? displayName = userData?['name'];
-
 
     final String firstLetter = displayName?[0]?.toUpperCase() ?? '';
 
@@ -32,36 +28,34 @@ class ChatPage extends GetView<ChatController> {
             },
           ),
         ),
-        title: Row(
-          children: [
-
-
-            Column(
-              children: [
+        title: Row(children: [
+          Column(children: [
             Row(
-            children: [
-            CircleAvatar(
-            backgroundColor: Colors.black,
-              child: Text(
-                firstLetter,
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            SizedBox(width: 20.0),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  displayName ?? '',
-                  style: textBolds,
+                CircleAvatar(
+                  backgroundColor: Colors.black,
+                  child: Text(
+                    firstLetter,
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 20.0),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName ?? '',
+                      style: textBolds,
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ])])),
+          ])
+        ]),
+      ),
       body: Column(
         children: <Widget>[
           Expanded(
@@ -70,21 +64,27 @@ class ChatPage extends GetView<ChatController> {
               itemBuilder: (context, index) {
                 final message = controller.messages[index];
                 final isUserMessage = message.senderName == "You";
-                return ListTile(
-                  title: Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isUserMessage
-                          ? Color(0xFF20A090)
-                          : Colors.grey,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      message.messageContent,
-                      style: TextStyle(
+
+                return Align(
+                  alignment: isUserMessage
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      padding: EdgeInsets.all(10),
+                      decoration: BoxDecoration(
                         color: isUserMessage
-                            ? Colors.white
-                            : Colors.black,
+                            ? Color(0xFF20A090)
+                            : Color(0xFF797C7B),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        message.messageContent,
+                        style: TextStyle(
+                          color:
+                          isUserMessage ? Colors.white : Colors.black,
+                        ),
                       ),
                     ),
                   ),
@@ -112,11 +112,16 @@ class ChatPage extends GetView<ChatController> {
                         border: Border.all(width: 0.0, color: Colors.grey),
                       ),
                       child: TextFormField(
+                        controller: controller.messageEditingController,
                         decoration: InputDecoration(
                           hintText: 'Write your message',
                           hintStyle: textWelcomeBack,
                           contentPadding: EdgeInsets.only(
-                              left: 15.0, right: 15, top: 5.0, bottom: 5.0),
+                            left: 15.0,
+                            right: 15,
+                            top: 5.0,
+                            bottom: 5.0,
+                          ),
                           border: InputBorder.none,
                         ),
                         onFieldSubmitted: (message) {
@@ -137,12 +142,15 @@ class ChatPage extends GetView<ChatController> {
                   IconButton(
                     icon: Icon(Icons.send),
                     onPressed: () {
+                      // Get the message from the text form field
+                      final message =
+                          controller.messageEditingController.text;
                       // Fetch the recipient's name from the user data
                       final recipientName = userData?['name'];
-                      // Get the message from the text form field
-                      final message = 'Your message here'; // Replace with the actual message
-                      // Call the modified sendMessage function
+                      // Call the modified sendMessage function with both parameters
                       controller.sendMessage(message, recipientName);
+                      // Clear the text form field
+                      controller.messageEditingController.clear();
                     },
                   ),
                 ],
