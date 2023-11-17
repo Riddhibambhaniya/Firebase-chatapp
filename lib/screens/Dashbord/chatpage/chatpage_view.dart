@@ -14,13 +14,17 @@ class ChatPage extends GetView<ChatController> {
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic>? userData =
-        Get.arguments; // Fetch user data from the arguments
+        Get.arguments;
+    String? displayName = userData?['name'];
+
+
+    final String firstLetter = displayName?[0]?.toUpperCase() ?? '';
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 30.0),
+          padding: const EdgeInsets.only(left: 20.0),
           child: IconButton(
             icon: Icon(Icons.arrow_back, color: ColorConstants.black),
             onPressed: () {
@@ -31,19 +35,33 @@ class ChatPage extends GetView<ChatController> {
         title: Row(
           children: [
 
-            SizedBox(width: 12.0),
-            Column(
 
+            Column(
+              children: [
+            Row(
+            children: [
+            CircleAvatar(
+            backgroundColor: Colors.black,
+              child: Text(
+                firstLetter,
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(width: 20.0),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  userData?['name'] ?? '', // Set the user's name
+                  displayName ?? '',
                   style: textBolds,
                 ),
               ],
             ),
           ],
         ),
-      ),
+      ])])),
       body: Column(
         children: <Widget>[
           Expanded(
