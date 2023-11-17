@@ -70,7 +70,7 @@ const TextStyle appbar1 = TextStyle(
 );
 const TextStyle appbar2 = TextStyle(
   color: Color(0xFF000D07),
-  fontSize: 18,
+  fontSize: 16,
   fontFamily: 'Poppins',
   fontWeight: FontWeight.w500,
 

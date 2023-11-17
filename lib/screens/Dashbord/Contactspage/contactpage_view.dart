@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../styles/text_style.dart';
+import '../../Sign inscreen/signin_controller.dart';
+import '../chatpage/chatpage_view.dart';
 import 'contactpage_controller.dart';
 
 class UserData1 {
+  final String userUuid;
   final String username;
   final String details;
   final String avatar;
 
   UserData1({
+    required this.userUuid,
     required this.username,
     required this.details,
     required this.avatar,
@@ -18,125 +22,93 @@ class UserData1 {
 
 class ContactPage extends GetView<ContactController> {
   final ContactController controller = Get.put(ContactController());
+  final SignInController signInController = Get.find<SignInController>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Container(
-            child: AppBar(
-              backgroundColor: Colors.transparent,
-              leading: Padding(
-                padding: const EdgeInsets.only(top: 28.0),
-                child: Icon(Icons.search, color: Colors.white),
-              ),
-              title: Padding(
-                padding: const EdgeInsets.only(top: 20.0),
-                child: Center(
-                  child: Text(
-                    'Contacts',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20.0, // Adjust the font size as needed
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                GestureDetector(
-                  onTap: () {
-                    // Add your action when the circular avatar is tapped.
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(top:15,right: 38.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.grey,
-                      ),
-                      child: CircleAvatar(
-                        radius: 40.0,
-                        backgroundColor: Colors.white,
-                        child: CircleAvatar(
-                          radius: 70.0,
-                          backgroundColor: Colors.black,
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 40.0, // Adjust the icon size as needed
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          AppBar(
+            backgroundColor: Colors.black,
+
+            leading: Padding(
+              padding: const EdgeInsets.only(left:24.0),
+              child: Icon(Icons.search, color: Colors.white),
             ),
-          ), // Circular body with circular border
+            title:  Padding(
+              padding: const EdgeInsets.only(left:78.0),
+              child: Text('Contacts', style: TextStyle(color: Colors.white)),
+            )
+
+          ),
           Positioned(
-              top: 120.0, // Adjust the top position to align with the app bar
-              left: 0,
-              right: 0,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30.0),
-                    topRight: Radius.circular(30.0),
-                  ),
-                  color: Colors.white,
-                  border: Border.all(
-                    //color: Colors.grey, // Set the border color to gray
-                    width: 5.0,
-                  ),
+            top: 120.0,
+            left: 0,
+            right: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30.0),
+                  topRight: Radius.circular(30.0),
                 ),
-                width: 300,
-                height: 1000,
-                child: Column(children: [
+                color: Colors.white,
+
+              ),
+
+              height: MediaQuery.of(context).size.height *0.8,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   SizedBox(
                     height: 20,
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(right:188.0),
+                    padding: const EdgeInsets.only(right: 215.0),
                     child: Text(
                       'My Contacts',
                       style: appbar2,
                     ),
                   ),
                   Expanded(
-                      child: ListView.builder(
-                        shrinkWrap:true,
-                        itemCount: controller.sortedUserData.length,
-                        itemBuilder: (context, index) {
-                          final userData = controller.sortedUserData[index];
-                          // Check if the first character of the current username is different from the previous one
-                          final showHeader = index == 0 ||
-                              userData.username[0] !=
-                                  controller
-                                      .sortedUserData[index - 1].username[0];
+                    child: GetBuilder<ContactController>(
+                      builder: (controller) {
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: controller.userList.length,
+                          itemBuilder: (context, index) {
+                            final userData = controller.userList[index];
+                            final showHeader = index == 0 ||
+                                userData.username[0] !=
+                                    controller.userList[index - 1].username[0];
 
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (showHeader)
-                                Padding(
-                                  padding: const EdgeInsets.only(right:288.0),
-                                  child: Text(
-                                    userData.username[0],
-                                    style: appbar2,
+
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (showHeader)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 310.0),
+                                    child: Text(
+                                      userData.username[0],
+                                      style: appbar2,
+                                    ),
                                   ),
-                                ),
-                              SizedBox(height: 10,),
-                              Padding(
-                                padding: const EdgeInsets.only(left:18.0),
-                                child: UserRow1(userData1: userData),
-                              ),
-                            ],
-                          );
-                        },
-                      )),
-                ]),
-              ))
+                                SizedBox(height: 10,),
+
+                                   UserRow1(userData1: userData),
+
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -150,21 +122,50 @@ class UserRow1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        color: Colors.white,
+    return GestureDetector(
+        onTap: () {
+      // Navigate to the ChatPage with user details
+      Get.to(() => ChatPage(), arguments: {
+        'uuid': userData1.userUuid, // Assuming you have a userUuid property in UserData1
+        'name': userData1.username,
+        'email': userData1.details,
+      });
+    },
+    child: Container(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5, )),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(right:40.0,top:5.0,bottom:5.0),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: 30.0,
-              backgroundImage: AssetImage(userData1.avatar),
+            Padding(
+              padding: const EdgeInsets.only(left:30.0,right:10.0,bottom:5.0),
+              child: CircleAvatar(
+                radius: 25.0, backgroundColor: Colors.black,
+                backgroundImage: (userData1.avatar.isNotEmpty)
+                    ? AssetImage(userData1.avatar)
+                    : null, // Use null when there is no image
+                child: (userData1.avatar.isEmpty)
+                    ? Text(
+                  userData1.username.isNotEmpty
+                      ? userData1.username[0].toUpperCase()
+                      : '', // Display the first letter of the username
+                  style: TextStyle(
+                    fontSize: 15.0,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+                    : null, // Display nothing when there is an image
+              ),
+
             ),
             SizedBox(width: 10.0),
-            Padding(
-              padding: const EdgeInsets.only(left:8.0),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(userData1.username, style: appbar2),
                   Text(userData1.details, style: appbar1),
@@ -174,6 +175,6 @@ class UserRow1 extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ) );
   }
 }

@@ -28,7 +28,10 @@ class MessagePage extends GetView<MessageController> {
           AppBar(
             backgroundColor: Colors.black, // Set the app bar background color to black
 
-            leading: Icon(Icons.search, color: Colors.white),
+            leading: Padding(
+              padding: const EdgeInsets.only(left:24.0),
+              child: Icon(Icons.search, color: Colors.white),
+            ),
             title: Center(child: Text('HOME', style: TextStyle(color: Colors.white))),
             actions: [
               GestureDetector(
@@ -36,7 +39,7 @@ class MessagePage extends GetView<MessageController> {
                   Get.to(() => MyProfileView());      // Add your action when the circular avatar is tapped.
                 },
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 38.0),
+                  padding: const EdgeInsets.only(right: 24.0),
                   child: Container(
                     child: CircleAvatar(
                       radius:25.0,
