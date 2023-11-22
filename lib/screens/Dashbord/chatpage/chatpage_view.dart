@@ -1,20 +1,25 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:project_structure_with_getx/styles/colorconstants.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../models/chatmessage.dart';
 import '../../../styles/text_style.dart';
 import '../dashbord_view.dart';
 import 'chatpage_controller.dart';
 
 class ChatPage extends GetView<ChatController> {
+  final TextEditingController _messageController = TextEditingController();
   final ChatController controller = Get.put(ChatController());
 
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic>? userData = Get.arguments;
     String? displayName = userData?['name'];
+    final String? senderId = FirebaseAuth.instance.currentUser?.uid;
 
     final String firstLetter = displayName?[0]?.toUpperCase() ?? '';
+    controller.listenForMessages(userData?['uuid']);
 
     return Scaffold(
       appBar: AppBar(
@@ -22,39 +27,43 @@ class ChatPage extends GetView<ChatController> {
         leading: Padding(
           padding: const EdgeInsets.only(left: 20.0),
           child: IconButton(
-            icon: Icon(Icons.arrow_back, color: ColorConstants.black),
+            icon: Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () {
               Get.to(() => DashboardScreen());
             },
           ),
         ),
-        title: Row(children: [
-          Column(children: [
-            Row(
+        title: Row(
+          children: [
+            Column(
               children: [
-                CircleAvatar(
-                  backgroundColor: Colors.black,
-                  child: Text(
-                    firstLetter,
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 20.0),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Text(
-                      displayName ?? '',
-                      style: textBolds,
+                    CircleAvatar(
+                      backgroundColor: Colors.black,
+                      child: Text(
+                        firstLetter,
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 20.0),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName ?? '',
+                          style: textBolds,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ],
             ),
-          ])
-        ]),
+          ],
+        ),
       ),
       body: Column(
         children: <Widget>[
@@ -63,7 +72,7 @@ class ChatPage extends GetView<ChatController> {
               itemCount: controller.messages.length,
               itemBuilder: (context, index) {
                 final message = controller.messages[index];
-                final isUserMessage = message.senderName == "You";
+                final isUserMessage = message.senderId == senderId;
 
                 return Align(
                   alignment: isUserMessage
@@ -82,10 +91,10 @@ class ChatPage extends GetView<ChatController> {
                       child: Text(
                         message.messageContent,
                         style: TextStyle(
-                          color:
-                          isUserMessage ? Colors.white : Colors.black,
+                          color: isUserMessage ? Colors.white : Colors.black,
                         ),
                       ),
+
                     ),
                   ),
                 );
@@ -112,7 +121,7 @@ class ChatPage extends GetView<ChatController> {
                         border: Border.all(width: 0.0, color: Colors.grey),
                       ),
                       child: TextFormField(
-                        controller: controller.messageEditingController,
+                        controller: _messageController,
                         decoration: InputDecoration(
                           hintText: 'Write your message',
                           hintStyle: textWelcomeBack,
@@ -125,10 +134,8 @@ class ChatPage extends GetView<ChatController> {
                           border: InputBorder.none,
                         ),
                         onFieldSubmitted: (message) {
-                          // Fetch the recipient's name from the user data
-                          final recipientName = userData?['name'];
-                          // Call the modified sendMessage function
-                          controller.sendMessage(message, recipientName);
+                          controller.sendMessage(
+                              userData?['uuid'], message);
                         },
                       ),
                     ),
@@ -142,15 +149,20 @@ class ChatPage extends GetView<ChatController> {
                   IconButton(
                     icon: Icon(Icons.send),
                     onPressed: () {
-                      // Get the message from the text form field
-                      final message =
-                          controller.messageEditingController.text;
-                      // Fetch the recipient's name from the user data
-                      final recipientName = userData?['name'];
-                      // Call the modified sendMessage function with both parameters
-                      controller.sendMessage(message, recipientName);
-                      // Clear the text form field
-                      controller.messageEditingController.clear();
+                      controller.sendMessage(
+                          userData?['uuid'], _messageController.text);
+                      final user = FirebaseAuth.instance.currentUser;
+                      final sentMessage = ChatMessage(
+                        senderId: senderId ?? '',
+                        recipientId: userData?['uuid'] ?? '',
+                        messageContent: _messageController.text,
+                        timestamp: Timestamp.now(),
+                        senderName: user?.displayName ?? 'You',
+                      );
+
+
+                      controller.messages.add(sentMessage);
+                      _messageController.clear();
                     },
                   ),
                 ],

@@ -3,10 +3,10 @@ import 'package:get/get.dart';
 import 'package:project_structure_with_getx/screens/Dashbord/dashbord_view.dart';
 import 'package:project_structure_with_getx/styles/colorconstants.dart';
 
-import '../../Firebase/auth_controller.dart';
+
 import '../../styles/text_style.dart';
 
-import '../Sign inscreen/signin_controller.dart';
+
 import 'myprofile_controller.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
@@ -72,7 +72,8 @@ class MyProfileView extends GetView<MyProfileController> {
                 ),
                 width: 400,
                 height: 1000,
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
                       height: 40,
@@ -97,7 +98,7 @@ class MyProfileView extends GetView<MyProfileController> {
                               controller.userName.value,
                               style: appbar2,
                             ),
-                       ),
+                        ),
 
 
                     SizedBox(

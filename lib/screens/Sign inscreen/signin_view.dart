@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../styles/text_style.dart';
 import 'signin_controller.dart'; // Import your controller
 
-class SignInPage extends StatelessWidget {
+class SignInPage extends  GetView<SignInController> {
   final SignInController controller = Get.put(SignInController());
 
   @override

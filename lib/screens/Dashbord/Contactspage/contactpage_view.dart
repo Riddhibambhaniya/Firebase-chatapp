@@ -3,21 +3,27 @@ import 'package:get/get.dart';
 
 import '../../../styles/text_style.dart';
 import '../../Sign inscreen/signin_controller.dart';
+import '../../searchscreen/searchscreen_view.dart';
 import '../chatpage/chatpage_view.dart';
 import 'contactpage_controller.dart';
 
 class UserData1 {
   final String userUuid;
   final String username;
-  final String details;
-  final String avatar;
+
+  final String profilepicture;
+  final String email;
+  final String phonenumber;
 
   UserData1({
     required this.userUuid,
     required this.username,
-    required this.details,
-    required this.avatar,
+
+    required this.profilepicture,
+    required this.email,
+    required this.phonenumber,
   });
+
 }
 
 class ContactPage extends GetView<ContactController> {
@@ -34,7 +40,10 @@ class ContactPage extends GetView<ContactController> {
 
             leading: Padding(
               padding: const EdgeInsets.only(left:24.0),
-              child: Icon(Icons.search, color: Colors.white),
+              child: IconButton(
+                icon: Icon(Icons.search, color: Colors.white),
+                onPressed: () => Get.to(() => SearchScreen()),
+              ),
             ),
             title:  Padding(
               padding: const EdgeInsets.only(left:78.0),
@@ -128,7 +137,7 @@ class UserRow1 extends StatelessWidget {
       Get.to(() => ChatPage(), arguments: {
         'uuid': userData1.userUuid, // Assuming you have a userUuid property in UserData1
         'name': userData1.username,
-        'email': userData1.details,
+        'email': userData1.email,
       });
     },
     child: Container(
@@ -144,10 +153,10 @@ class UserRow1 extends StatelessWidget {
               padding: const EdgeInsets.only(left:30.0,right:10.0,bottom:5.0),
               child: CircleAvatar(
                 radius: 25.0, backgroundColor: Colors.black,
-                backgroundImage: (userData1.avatar.isNotEmpty)
-                    ? AssetImage(userData1.avatar)
+                backgroundImage: (userData1.profilepicture.isNotEmpty)
+                    ? AssetImage(userData1.profilepicture)
                     : null, // Use null when there is no image
-                child: (userData1.avatar.isEmpty)
+                child: (userData1.profilepicture.isEmpty)
                     ? Text(
                   userData1.username.isNotEmpty
                       ? userData1.username[0].toUpperCase()
@@ -168,7 +177,7 @@ class UserRow1 extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(userData1.username, style: appbar2),
-                  Text(userData1.details, style: appbar1),
+                  Text(userData1.email, style: appbar1),
                 ],
               ),
             ),
