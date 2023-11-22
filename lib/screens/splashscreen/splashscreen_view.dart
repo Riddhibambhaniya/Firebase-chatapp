@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:project_structure_with_getx/screens/splashscreen/splash_controller.dart';
 
-import '../../utils/imagepath.dart'; // Import the ImagePath class
+import '../../utils/imagepath.dart';
 
 class SplashView extends GetView<SplashController> {
   final controller = Get.find<SplashController>();
@@ -18,7 +18,7 @@ class SplashView extends GetView<SplashController> {
             Image.asset(ImagePath.logo,
               fit: BoxFit.fill,
               height: 200,
-              width: 200,), // Use the image path from ImagePath class
+              width: 200,),
 
           ],
         ),

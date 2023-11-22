@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 import '../../../models/chatmessage.dart';
 import '../../../styles/text_style.dart';
@@ -11,6 +12,8 @@ import 'chatpage_controller.dart';
 class ChatPage extends GetView<ChatController> {
   final TextEditingController _messageController = TextEditingController();
   final ChatController controller = Get.put(ChatController());
+  bool _todaySeparatorShown = false;
+  bool _yesterdaySeparatorShown = false;
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +23,19 @@ class ChatPage extends GetView<ChatController> {
 
     final String firstLetter = displayName?[0]?.toUpperCase() ?? '';
     controller.listenForMessages(userData?['uuid']);
+
+    bool isTodayMessage(ChatMessage message) {
+      return DateTime.now().year == message.timestamp.toDate().year &&
+          DateTime.now().month == message.timestamp.toDate().month &&
+          DateTime.now().day == message.timestamp.toDate().day;
+    }
+
+    bool isYesterdayMessage(ChatMessage message) {
+      DateTime yesterday = DateTime.now().subtract(Duration(days: 1));
+      return yesterday.year == message.timestamp.toDate().year &&
+          yesterday.month == message.timestamp.toDate().month &&
+          yesterday.day == message.timestamp.toDate().day;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -69,37 +85,64 @@ class ChatPage extends GetView<ChatController> {
         children: <Widget>[
           Expanded(
             child: Obx(() => ListView.builder(
-              itemCount: controller.messages.length,
-              itemBuilder: (context, index) {
-                final message = controller.messages[index];
-                final isUserMessage = message.senderId == senderId;
+                  itemCount: controller.messages.length,
+                  itemBuilder: (context, index) {
+                    final message = controller.messages[index];
+                    final isUserMessage = message.senderId == senderId;
 
-                return Align(
-                  alignment: isUserMessage
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      padding: EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: isUserMessage
-                            ? Color(0xFF20A090)
-                            : Color(0xFF797C7B),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        message.messageContent,
-                        style: TextStyle(
-                          color: isUserMessage ? Colors.white : Colors.black,
-                        ),
-                      ),
-
-                    ),
-                  ),
-                );
-              },
-            )),
+                    // Show the date separator for today only once
+                    if (isTodayMessage(message) && !_todaySeparatorShown) {
+                      _todaySeparatorShown = true;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Center(
+                              child: Text(
+                                'Today',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Message widget
+                          buildMessageWidget(message, isUserMessage),
+                        ],
+                      );
+                    } else if (isYesterdayMessage(message) &&
+                        !_yesterdaySeparatorShown) {
+                      // Show the date separator for yesterday only once
+                      _yesterdaySeparatorShown = true;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Center(
+                              child: Text(
+                                'Yesterday',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Message widget
+                          buildMessageWidget(message, isUserMessage),
+                        ],
+                      );
+                    } else {
+                      // Only show the message widget for other dates
+                      return buildMessageWidget(message, isUserMessage);
+                    }
+                  },
+                )),
           ),
           Align(
             alignment: Alignment.bottomCenter,
@@ -134,8 +177,7 @@ class ChatPage extends GetView<ChatController> {
                           border: InputBorder.none,
                         ),
                         onFieldSubmitted: (message) {
-                          controller.sendMessage(
-                              userData?['uuid'], message);
+                          controller.sendMessage(userData?['uuid'], message);
                         },
                       ),
                     ),
@@ -160,7 +202,6 @@ class ChatPage extends GetView<ChatController> {
                         senderName: user?.displayName ?? 'You',
                       );
 
-
                       controller.messages.add(sentMessage);
                       _messageController.clear();
                     },
@@ -170,6 +211,44 @@ class ChatPage extends GetView<ChatController> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget buildMessageWidget(ChatMessage message, bool isUserMessage) {
+    // Format the timestamp to display only the time
+    String formattedTime = DateFormat.Hm().format(message.timestamp.toDate());
+
+    return Align(
+      alignment: isUserMessage ? Alignment.centerRight : Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 15),
+        child: Container(
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isUserMessage ? Color(0xFF20A090) : Color(0xFFF2F7FB),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                message.messageContent,
+                style: TextStyle(
+                  color: isUserMessage ? Colors.white : Colors.black,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                '${message.senderName} • $formattedTime',
+                style: TextStyle(
+                  color: isUserMessage ? Colors.white70 : Colors.black54,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

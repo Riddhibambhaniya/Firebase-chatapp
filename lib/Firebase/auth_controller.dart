@@ -16,43 +16,21 @@ class AuthController extends GetxController {
     user.bindStream(_auth.authStateChanges());
   }
 
-  Future<User?> signInWithEmailAndPassword(String email, String password) async {
-    try {
-      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      final User? currentUser = userCredential.user;
-      await _storeUserDataInSharedPreferences(currentUser);
-      return currentUser;
-    } catch (e) {
-      print("Error signing in: $e");
-      return null;
-    }
-  }
 
   Future<void> signOutAndNavigateToOnboarding() async {
     try {
       await _auth.signOut();
       clearUserData();
-      Get.offAll(OnboardingScreen()); // Navigate to the OnboardingScreen
+      Get.offAll(OnboardingScreen());
     } catch (e) {
       print("Error signing out: $e");
     }}
 
-  Future<void> _storeUserDataInSharedPreferences(User? user) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (user != null) {
-      prefs.setString("userUid", user.uid);
-      prefs.setString("userEmail", user.email ?? "");
-      // Add more user data as needed
-    }
-  }
 
   Future<void> clearUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    // You can add more code here to clear any additional user data if needed
+
   }
 
 }

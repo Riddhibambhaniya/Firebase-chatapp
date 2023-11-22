@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 
 import '../../routes/app_routes.dart';
-import '../on bordingscreen/on bording_view.dart';
+
 
 class SplashController extends GetxController {
   @override

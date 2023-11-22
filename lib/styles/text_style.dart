@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'colorconstants.dart';
 
 
-// TextStyle constants for your app
+
 const TextStyle textWelcomeBack = TextStyle(
   color: Color(0xFF797C7B),
   fontSize: 14,

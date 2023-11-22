@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../styles/text_style.dart';
-import 'signin_controller.dart'; // Import your controller
+import 'signin_controller.dart';
 
 class SignInPage extends  GetView<SignInController> {
   final SignInController controller = Get.put(SignInController());
@@ -83,7 +83,7 @@ account or email to continue us''',
                       ),
                     ),
                     onPressed: () {
-                      controller.signIn(); // Call the signIn method in your controller
+                      controller.signIn();
                     },
                     child: Text('Log in', style: textBolds),
                   ),

@@ -9,7 +9,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.black, // Set background color to black
+        backgroundColor: Colors.black,
         body: SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -17,7 +17,6 @@ class OnboardingScreen extends GetView<OnboardingController> {
                 SizedBox(
                   height: 20,
                 ),
-
                 Column(
                   children: [
                     Row(
@@ -28,8 +27,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                           fit: BoxFit.fill,
                           height: 40,
                           width: 40,
-                        ), // Use the image path from ImagePath class
-
+                        ),
                         Padding(
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Text(
@@ -54,12 +52,11 @@ class OnboardingScreen extends GetView<OnboardingController> {
                     ],
                   ),
                 ),
-
                 SizedBox(
                   height: 40,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(right:60.0),
+                  padding: const EdgeInsets.only(right: 60.0),
                   child: Text(
                     '''Our chat app is the perfect way to stay
 connected with friends and family.''',
@@ -80,7 +77,6 @@ connected with friends and family.''',
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                   // onPressed: () => controller.register(),
                     onPressed: () {
                       Get.toNamed('/signup'); // Navigate to the sign-up page
                     },
@@ -90,20 +86,22 @@ connected with friends and family.''',
                 SizedBox(
                   height: 20,
                 ),
-
-                Container(width: 260,
+                Container(
+                  width: 260,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Existing account? Log in', style: textLogIn,),
+                      Text(
+                        'Existing account? Log in',
+                        style: textLogIn,
+                      ),
                       TextButton(
-                       // onPressed: () => controller.login(),
                         onPressed: () {
-                          Get.toNamed('/login'); // Navigate to the login page
+                          Get.toNamed('/login');
                         },
                         child: Padding(
-                          padding: const EdgeInsets.only(top:4.0),
-                          child: Text('Log In',style: texts ),
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text('Log In', style: texts),
                         ),
                       ),
                     ],

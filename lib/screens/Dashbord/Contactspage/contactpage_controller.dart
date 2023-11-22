@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/src/widgets/editable_text.dart';
 import 'package:get/get.dart';
-import 'contactpage_view.dart';
+import '../../../models/contectpagemodel.dart';
 
 class ContactController extends GetxController {
   final List<UserData1> userList = [];
@@ -14,22 +14,20 @@ class ContactController extends GetxController {
     fetchUserList();
   }
 
-
   Future<void> fetchUserList() async {
     try {
-      // Check if the user is logged in
       if (FirebaseAuth.instance.currentUser != null) {
-        final users = await FirebaseFirestore.instance.collection('users').get();
+        final users =
+            await FirebaseFirestore.instance.collection('users').get();
         print('Number of user documents: ${users.docs.length}');
         users.docs.forEach((element) {
           userList.add(UserData1(
-              username: element.get("name") , // Provide a default value if it's nullable
+              username: element
+                  .get("name"), // Provide a default value if it's nullable
               profilepicture: element.get("profilepicture"),
               userUuid: element.get("uuid"),
               email: element.get("email"),
-              phonenumber: element.get("phonenumber")
-
-          ));
+              phonenumber: element.get("phonenumber")));
         });
 
         update(); // Trigger UI update
@@ -39,15 +37,12 @@ class ContactController extends GetxController {
     }
   }
 
-
-
   void search(String query) {
     searchResults.clear();
     if (query.isEmpty) {
-
     } else {
       searchResults.addAll(userList.where(
-            (user) => user.username.toLowerCase().contains(query.toLowerCase()),
+        (user) => user.username.toLowerCase().contains(query.toLowerCase()),
       ));
     }
   }
@@ -58,4 +53,3 @@ class ContactController extends GetxController {
     update(); // Trigger UI update
   }
 }
-

@@ -8,33 +8,27 @@ import '../../Firebase/auth_controller.dart';
 class MyProfileController extends GetxController {
   final AuthController authController = Get.find<AuthController>();
 
-
   var userName = ''.obs;
   var userEmail = ''.obs;
-
-
+  var userProfilePic = ''.obs;
 
   @override
   Future<void> onInit() async {
     super.onInit();
-    // Retrieve user data from shared preferences
-    await  getUserDataFromSharedPreferences();
+
+    await getUserDataFromSharedPreferences();
   }
 
   Future<void> getUserDataFromSharedPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     userName.value = prefs.getString('user_name') ?? '';
     userEmail.value = prefs.getString('user_email') ?? '';
+    userProfilePic.value = prefs.getString('user_profile_pic') ?? '';
   }
-  // Method to log out the user and clear user data
 
   void logOut() {
+    authController.signOutAndNavigateToOnboarding();
+  }
 
-    authController.signOutAndNavigateToOnboarding(); // Call the new method
-  }
-  // Method to clear user data
-  void clearUserData() {
-    // Implement clearing user data here
-    // You can add your code to clear user-specific data from SharedPreferences, etc.
-  }
+  void clearUserData() {}
 }

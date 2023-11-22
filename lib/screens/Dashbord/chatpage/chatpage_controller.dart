@@ -18,7 +18,8 @@ class ChatController extends GetxController {
 
   void onInit() {
     super.onInit();
-    final String? recipientId = 'someRecipientId'; // Replace with your logic
+
+    final String? recipientId = 'someRecipientId';
     listenForMessages(recipientId ?? '');
   }
 
@@ -46,7 +47,7 @@ class ChatController extends GetxController {
           messages.value = newMessages;
 
           String? lastMessage =
-          newMessages.isNotEmpty ? newMessages.last.messageContent : null;
+              newMessages.isNotEmpty ? newMessages.last.messageContent : null;
           lastReceivedMessage.value = lastMessage ?? '';
           update();
         } catch (e) {
@@ -66,7 +67,7 @@ class ChatController extends GetxController {
         String chatCollectionPath = 'users/$recipientId/chatwith';
 
         DocumentReference documentReference =
-        await _firestore.collection(chatCollectionPath).add({
+            await _firestore.collection(chatCollectionPath).add({
           'senderId': senderId,
           'recipientId': recipientId,
           'messageContent': messageContent,
