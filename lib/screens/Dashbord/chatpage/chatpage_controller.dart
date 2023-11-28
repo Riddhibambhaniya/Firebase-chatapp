@@ -1,9 +1,12 @@
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:flutter/foundation.dart' as foundation;
 import '../../../models/chatmessage.dart';
+import '../Messagepage/messagepage_controller.dart';
 
 class ChatController extends GetxController {
   RxString lastReceivedMessage = ''.obs;
@@ -47,9 +50,9 @@ class ChatController extends GetxController {
           messages.value = newMessages;
 
           String? lastMessage =
-              newMessages.isNotEmpty ? newMessages.last.messageContent : null;
+          newMessages.isNotEmpty ? newMessages.last.messageContent : null;
           lastReceivedMessage.value = lastMessage ?? '';
-          update();
+          updateMessagePage();
         } catch (e) {
           print('Error listening for messages: $e');
         }
@@ -67,7 +70,7 @@ class ChatController extends GetxController {
         String chatCollectionPath = 'users/$recipientId/chatwith';
 
         DocumentReference documentReference =
-            await _firestore.collection(chatCollectionPath).add({
+        await _firestore.collection(chatCollectionPath).add({
           'senderId': senderId,
           'recipientId': recipientId,
           'messageContent': messageContent,
@@ -91,6 +94,10 @@ class ChatController extends GetxController {
         lastSentMessage.value = messageContent;
         messageEditingController.clear();
 
+        // Fetch updated messages and trigger MessagePage update
+        Get.find<MessageController>().fetchLastMessages();
+        updateMessagePage();
+
         return documentId;
       }
     } catch (e) {
@@ -99,9 +106,15 @@ class ChatController extends GetxController {
     }
   }
 
+  // Helper function to trigger MessagePage update
+  void updateMessagePage() {
+    Get.find<MessageController>().update();
+  }
+
   @override
   void onClose() {
     super.onClose();
     messageEditingController.dispose();
   }
 }
+

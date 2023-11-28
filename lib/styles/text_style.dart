@@ -39,7 +39,13 @@ const TextStyle textBolds = TextStyle(
   fontWeight: FontWeight.w800,
 
 );
+const TextStyle textBoldss = TextStyle(
+  color:  Colors.white,
+  fontSize: 16,
+  fontFamily: 'Poppins', // Use 'Poppins' as the font family
+  fontWeight: FontWeight.w800,
 
+);
 const TextStyle texts = TextStyle(
   color: Colors.white,
   fontSize: 14,

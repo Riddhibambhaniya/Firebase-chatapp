@@ -5,11 +5,12 @@ import 'package:project_structure_with_getx/styles/colorconstants.dart';
 
 import '../../styles/text_style.dart';
 
+import 'editprofile/editprofile_view.dart';
 import 'myprofile_controller.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
   final MyProfileController myProfileController =
-      Get.put(MyProfileController());
+  Get.put(MyProfileController());
 
   @override
   Widget build(BuildContext context) {
@@ -108,35 +109,57 @@ class MyProfileView extends GetView<MyProfileController> {
                     SizedBox(
                       height: 70,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 38.0),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          primary: Colors.black,
-                          onPrimary: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
+
+                       Center(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.black,
+                            onPrimary: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                            ),
                           ),
+                          onPressed: () {
+                            // Navigate to the edit profile screen
+                            Get.to(() => EditProfileView());
+                          },
+                          child: Text("Edit Profile"),
                         ),
-                        onPressed: () {
-                          Get.defaultDialog(
-                            title: "Log Out",
-                            titleStyle: textBolds,
-                            middleText: "Are you sure you want to log out?",
-                            middleTextStyle: appbar2,
-                            textConfirm: "Yes",
-                            textCancel: "No",
-                            onConfirm: () {
-                              controller.logOut();
-                            },
-                            onCancel: () {
-                              Get.back();
-                            },
-                          );
-                        },
-                        child: Text("Log Out"),
                       ),
+
+                    SizedBox(
+                      height: 40,
                     ),
+
+                       Center(
+                         child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.black,
+                            onPrimary: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                            ),
+                          ),
+                          onPressed: () {
+                            Get.defaultDialog(
+                              title: "Log Out",
+                              titleStyle: textBolds,
+                              middleText: "Are you sure you want to log out?",
+                              middleTextStyle: appbar2,
+                              textConfirm: "Yes",
+                              textCancel: "No",
+                              onConfirm: () {
+                                controller.logOut();
+                              },
+                              onCancel: () {
+                                Get.back();
+                              },
+                            );
+                          },
+                          child: Text("Log Out"),
+                      ),
+                       ),
+
                   ],
                 ),
               )

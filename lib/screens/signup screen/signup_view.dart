@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../styles/text_style.dart';
 import 'signup_controller.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
+
 
 class SignUpPage extends StatelessWidget {
   final SignUpController controller = Get.put(SignUpController());
@@ -44,8 +44,12 @@ signing up for our chat app!''',
                   child: Container(
                     width: 340,
                     child: TextFormField(
+                      controller: controller.nameController,
                       validator: controller.validateName,
-                      onChanged: (value) => controller.name.value = value,
+                      onChanged: (value) {
+                        controller.name.value = value;
+                        controller.updateButtonColor();
+                      },
                       decoration: InputDecoration(
                         hintText: 'Name',
                       ),
@@ -65,8 +69,12 @@ signing up for our chat app!''',
                   child: Container(
                     width: 340,
                     child: TextFormField(
+                      controller: controller.emailController,
                       validator: controller.validateEmail,
-                      onChanged: (value) => controller.email.value = value,
+                      onChanged: (value) {
+                        controller.email.value = value;
+                        controller.updateButtonColor();
+                      },
                       decoration: InputDecoration(
                         hintText: 'Email',
                       ),
@@ -84,8 +92,12 @@ signing up for our chat app!''',
                 Container(
                   width: 340,
                   child: TextFormField(
+                    controller: controller.passwordController,
                     validator: controller.validatePassword,
-                    onChanged: (value) => controller.password.value = value,
+                    onChanged: (value) {
+                      controller.password.value = value;
+                      controller.updateButtonColor();
+                    },
                     decoration: InputDecoration(
                       hintText: 'Password',
                     ),
@@ -102,74 +114,36 @@ signing up for our chat app!''',
                 Container(
                   width: 340,
                   child: TextFormField(
+                    controller: controller.confirmPasswordController,
                     validator: controller.validateConfirmPassword,
-                    onChanged: (value) =>
-                        controller.confirmPassword.value = value,
+                    onChanged: (value) {
+                      controller.confirmPassword.value = value;
+                      controller.updateButtonColor();
+                    },
                     decoration: InputDecoration(
                       hintText: 'Confirm Password',
                     ),
                   ),
                 ),
                 SizedBox(height: 100.0),
-                Container(
+                Obx(() => Container(
                   width: 340,
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white70,
+                      backgroundColor: controller.isFormValid.value
+                          ? Color(0xFF24786D) // Change the color based on form validation
+                          : Colors.white70,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () async {
-                      if (controller.isValidForm) {
-                        try {
-                          final userCredential = await FirebaseAuth.instance
-                              .createUserWithEmailAndPassword(
-                            email: controller.email.value,
-                            password: controller.password.value,
-                          );
-
-                          if (userCredential.user != null) {
-                            await FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(userCredential.user!.uid)
-                                .set({
-                              'name': controller.name.value,
-                              'email': controller.email.value,
-                            });
-
-                            Get.offNamed('/home');
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Registration failed. Please try again.'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Registration failed: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text('Please fill in all fields correctly.'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
+                    onPressed: () {
+                      controller.createAccount();
                     },
-                    child: Text('Create an account', style: textBolds),
+                    child: Text('Create an account', style: textBoldss),
                   ),
-                ),
+                )),
                 SizedBox(height: 20.0),
               ],
             ),

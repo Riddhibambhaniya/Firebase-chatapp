@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../styles/text_style.dart';
+import '../forgot password/forgotpassword_view.dart';
 import 'signin_controller.dart';
 
-class SignInPage extends  GetView<SignInController> {
+class SignInPage extends GetView<SignInController> {
   final SignInController controller = Get.put(SignInController());
+
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +46,12 @@ account or email to continue us''',
                   child: Container(
                     width: 340,
                     child: TextFormField(
-                      validator: controller
-                          .validateEmail, // Use controller for validation
-                      onChanged: (value) => controller.email.value = value,
+                      controller: emailController,
+                      validator: controller.validateEmail,
+                      onChanged: (value) {
+                        controller.email.value = value;
+                        controller.updateButtonColor();
+                      },
                       decoration: InputDecoration(
                         hintText: 'Email',
                       ),
@@ -62,22 +69,26 @@ account or email to continue us''',
                 Container(
                   width: 340,
                   child: TextFormField(
-                    validator: controller
-                        .validatePassword, // Use controller for validation
-                    onChanged: (value) => controller.password.value = value,
-
+                    controller: passwordController,
+                    validator: controller.validatePassword,
+                    onChanged: (value) {
+                      controller.password.value = value;
+                      controller.updateButtonColor();
+                    },
                     decoration: InputDecoration(
                       hintText: 'Password',
                     ),
                   ),
                 ),
                 SizedBox(height: 140.0),
-                Container(
+                Obx(() => Container(
                   width: 340,
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white70,
+                      backgroundColor: controller.isFormValid.value
+                          ? Color(0xFF24786D)// Change the color based on form validation
+                          : Colors.white70,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -85,12 +96,12 @@ account or email to continue us''',
                     onPressed: () {
                       controller.signIn();
                     },
-                    child: Text('Log in', style: textBolds),
+                    child: Text('Log in', style: textBoldss),
                   ),
-                ),
+                )),
                 SizedBox(height: 20.0),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () { Get.to(() => ForgotPasswordScreen());},
                   child: Text('Forgot Password?', style: textYourEmail),
                 ),
               ],

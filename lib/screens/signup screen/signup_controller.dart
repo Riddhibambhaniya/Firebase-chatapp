@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
@@ -10,6 +11,12 @@ class SignUpController extends GetxController {
   final email = ''.obs;
   final password = ''.obs;
   final confirmPassword = ''.obs;
+  RxBool isFormValid = false.obs;
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+
   String? nameError;
   String? emailError;
   String? passwordError;
@@ -62,6 +69,18 @@ class SignUpController extends GetxController {
         emailError == null &&
         passwordError == null &&
         confirmPasswordError == null;
+  }
+  void updateButtonColor() {
+    isFormValid.value = validateName(name.value) == null &&
+        validateEmail(email.value) == null &&
+        validatePassword(password.value) == null &&
+        validateConfirmPassword(confirmPassword.value) == null;
+
+    print('Name: ${name.value}');
+    print('Email: ${email.value}');
+    print('Password: ${password.value}');
+    print('Confirm Password: ${confirmPassword.value}');
+    print('isFormValid: ${isFormValid.value}');
   }
 
   Future<void> createAccount() async {

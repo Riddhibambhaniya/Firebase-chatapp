@@ -4,11 +4,14 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../My profile/myprofile_controller.dart';
+
 class SignInController extends GetxController {
   final email = ''.obs;
   final password = ''.obs;
+  final TextEditingController emailController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
+  RxBool isFormValid = false.obs;
   String? userUuid;
   String? userName;
   String? userEmail;
@@ -16,7 +19,18 @@ class SignInController extends GetxController {
   String? validateEmail(String? value) {}
 
   String? validatePassword(String? value) {}
-
+  MyProfileController myProfileController = Get.put(MyProfileController());
+  @override
+  void onInit() {
+    super.onInit();
+    ever(myProfileController.userEmail, (_) {
+      // This will be triggered whenever userEmail in MyProfileController changes
+      if (email.value != myProfileController.userEmail.value) {
+        email.value = myProfileController.userEmail.value;
+        emailController.text = myProfileController.userEmail.value;
+      }
+    });
+  }
   Future<void> signIn() async {
     if (validateEmail(email.value) == null &&
         validatePassword(password.value) == null) {
@@ -34,11 +48,20 @@ class SignInController extends GetxController {
                 .collection('users')
                 .doc(userUid)
                 .get();
+
             final userUuid = userDoc.data()?['uuid'];
             final userName = userDoc.data()?['name'];
             final userEmail = userDoc.data()?['email'];
 
+            // Save user data to SharedPreferences
             saveUserDataToSharedPreferences(userUuid, userName, userEmail);
+
+            // Update MyProfileController
+            Get.find<MyProfileController>().updateProfileDetails(
+              userUuid: userUuid,
+              userName: userName,
+              userEmail: userEmail,
+            );
 
             Get.toNamed(
               '/home',
@@ -60,6 +83,11 @@ class SignInController extends GetxController {
             backgroundColor: Colors.red, colorText: Colors.white);
       }
     }
+  }
+
+  void updateButtonColor() {
+    isFormValid.value = validateEmail(email.value) == null &&
+        validatePassword(password.value) == null;
   }
 
   Future<void> saveUserDataToSharedPreferences(

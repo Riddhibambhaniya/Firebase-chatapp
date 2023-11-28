@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../../../models/messageusermodel.dart';
 import '../../../styles/text_style.dart';
@@ -8,8 +9,6 @@ import '../../My profile/myprofile_view.dart';
 import '../../searchscreen/searchscreen_view.dart';
 import 'messagepage_controller.dart';
 import '../chatpage/chatpage_view.dart';
-
-
 
 class MessagePage extends GetView<MessageController> {
   final MessageController controller = Get.put(MessageController());
@@ -30,7 +29,9 @@ class MessagePage extends GetView<MessageController> {
                 onPressed: () => Get.to(() => SearchScreen()),
               ),
             ),
-            title: Center(child: Text('HOME', style: TextStyle(color: Colors.white))),
+            title: Center(
+              child: Text('Chats', style: TextStyle(color: Colors.white)),
+            ),
             actions: [
               GestureDetector(
                 onTap: () {
@@ -40,7 +41,8 @@ class MessagePage extends GetView<MessageController> {
                   padding: const EdgeInsets.only(right: 24.0),
                   child: Obx(() {
                     final userController = Get.find<MyProfileController>();
-                    final userProfilePic = userController.userProfilePic.value;
+                    final userProfilePic =
+                        userController.userProfilePic.value;
                     final userName = userController.userName.value;
 
                     return CircleAvatar(
@@ -56,7 +58,8 @@ class MessagePage extends GetView<MessageController> {
                             : '',
                         style: TextStyle(
                           fontSize: 20.0,
-                          fontWeight: FontWeight.bold,color:Colors.black,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       )
                           : null,
@@ -80,13 +83,22 @@ class MessagePage extends GetView<MessageController> {
               ),
               width: 400,
               height: 1000,
-              child: ListView.separated(
-                itemCount: controller.userData.length,
-                separatorBuilder: (context, index) => SizedBox(height: 15.0),
-                itemBuilder: (context, index) {
-                  return UserRow(userData: controller.userData[index]);
-                },
-              ),
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else {
+                  return ListView.separated(
+                    itemCount: controller.userData.length,
+                    separatorBuilder: (context, index) =>
+                        SizedBox(height: 15.0),
+                    itemBuilder: (context, index) {
+                      return UserRow(userData: controller.userData[index]);
+                    },
+                  );
+                }
+              }),
             ),
           ),
         ],
@@ -95,7 +107,6 @@ class MessagePage extends GetView<MessageController> {
   }
 }
 
-
 class UserRow extends StatelessWidget {
   final UserData userData;
 
@@ -103,18 +114,12 @@ class UserRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get the current time
     final now = DateTime.now();
-
-    // Calculate the time difference
     final timeDifference = userData.lastMessageTimestamp != null
         ? now.difference(userData.lastMessageTimestamp!)
         : Duration.zero;
 
-    // Format the time difference using intl package
-    final formattedTimeDifference = timeDifference.inMinutes > 0
-        ? '${timeDifference.inMinutes} min ago'
-        : 'just now';
+    final formattedTimeDifference = _formatTimeDifference(timeDifference);
 
     return GestureDetector(
       onTap: () {
@@ -125,7 +130,8 @@ class UserRow extends StatelessWidget {
         });
       },
       child: Padding(
-        padding: const EdgeInsets.only(left: 9.0, right: 9.0, bottom: 15.0, top: 0.0),
+        padding: const EdgeInsets.only(
+            left: 9.0, right: 9.0, bottom: 15.0, top: 0.0),
         child: Container(
           color: Colors.white,
           child: Row(
@@ -170,4 +176,17 @@ class UserRow extends StatelessWidget {
       ),
     );
   }
+
+  String _formatTimeDifference(Duration timeDifference) {
+    if (timeDifference.inDays > 0) {
+      return DateFormat.yMMMd().add_jm().format(DateTime.now().subtract(timeDifference));
+    } else if (timeDifference.inHours > 0) {
+      return "${timeDifference.inHours}h ago";
+    } else if (timeDifference.inMinutes > 0) {
+      return "${timeDifference.inMinutes} min ago";
+    } else {
+      return "just now";
+    }
+  }
 }
+
