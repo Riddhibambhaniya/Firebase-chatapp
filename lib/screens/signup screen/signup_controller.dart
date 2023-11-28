@@ -97,7 +97,6 @@ class SignUpController extends GetxController {
         final userCredential = await _auth.createUserWithEmailAndPassword(
           email: email.value,
           password: password.value,
-
         );
 
         final user = userCredential.user;
@@ -105,6 +104,9 @@ class SignUpController extends GetxController {
 
         // Generate a UUID for the user
         final userUUID = Uuid().v4();
+
+        // Send email verification link
+        await user?.sendEmailVerification();
 
         // Store user data in Firestore with the UUID
         await FirebaseFirestore.instance.collection('users').doc(userUID).set({
@@ -123,5 +125,6 @@ class SignUpController extends GetxController {
       print('Form validation failed.');
     }
   }
+
 
 }

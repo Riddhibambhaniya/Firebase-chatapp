@@ -1,10 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../My profile/myprofile_controller.dart';
+
 
 class SignInController extends GetxController {
   final email = ''.obs;
@@ -16,21 +17,27 @@ class SignInController extends GetxController {
   String? userName;
   String? userEmail;
 
-  String? validateEmail(String? value) {}
+  String? validateEmail(String? value) {
+    // Add your email validation logic
+  }
 
-  String? validatePassword(String? value) {}
+  String? validatePassword(String? value) {
+    // Add your password validation logic
+  }
+
   MyProfileController myProfileController = Get.put(MyProfileController());
+
   @override
   void onInit() {
     super.onInit();
     ever(myProfileController.userEmail, (_) {
-      // This will be triggered whenever userEmail in MyProfileController changes
       if (email.value != myProfileController.userEmail.value) {
         email.value = myProfileController.userEmail.value;
         emailController.text = myProfileController.userEmail.value;
       }
     });
   }
+
   Future<void> signIn() async {
     if (validateEmail(email.value) == null &&
         validatePassword(password.value) == null) {

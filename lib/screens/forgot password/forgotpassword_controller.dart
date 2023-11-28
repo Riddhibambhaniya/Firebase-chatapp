@@ -1,23 +1,40 @@
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../OTP screen/otpscreen_view.dart';
 
 class ForgotPasswordController extends GetxController {
   RxBool isLoading = false.obs;
 
-  void resetPassword(String email) async {
+  Future<void> resetPassword(String email) async {
     try {
       isLoading(true);
 
-      // Simulate password reset logic
-      // Replace this with your actual password reset logic
-      await Future.delayed(Duration(seconds: 2));
+      if (GetUtils.isEmail(email)) {
+        // Use Firebase Authentication to send a password reset email
+        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
-      // Display success message
-      Get.snackbar('Success', 'Password reset email sent successfully',
-          snackPosition: SnackPosition.BOTTOM);
+        // Navigate to the OTP screen
+        Get.off(() => OtpScreenView());
+
+        Get.snackbar(
+          'Success',
+          'Password reset email sent successfully',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Invalid email format',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
     } catch (e) {
-      // Display error message
-      Get.snackbar('Error', 'Failed to send password reset email',
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        'Error',
+        'Failed to send password reset email: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } finally {
       isLoading(false);
     }

@@ -81,3 +81,10 @@ const TextStyle appbar2 = TextStyle(
   fontWeight: FontWeight.w500,
 
 );
+const TextStyle emailverification = TextStyle(
+  color: Color(0xFF24786D),
+  fontSize: 18,
+  fontFamily: 'Poppins',
+  fontWeight: FontWeight.w500,
+
+);
