@@ -160,11 +160,8 @@ class ChatPage extends GetView<ChatController> {
                   IconButton(
                     icon: Icon(Icons.emoji_emotions),
                     onPressed: () {
-                      // Open EmojiPicker when the emoji button is pressed
-                      Get.bottomSheet(
-                        Container(
-                          height: 300, // Set a fixed height for the bottom sheet
-                          child: EmojiPicker(
+
+                     EmojiPicker(
                             onEmojiSelected: (Category? category, Emoji? emoji) {
                               if (category != null && emoji != null) {
                                 _messageController.text = _messageController.text + emoji.emoji;
@@ -204,8 +201,7 @@ class ChatPage extends GetView<ChatController> {
                                 checkPlatformCompatibility: true,
                               )
 
-                          ),
-                        ),
+
                       );
                     },
                   ),

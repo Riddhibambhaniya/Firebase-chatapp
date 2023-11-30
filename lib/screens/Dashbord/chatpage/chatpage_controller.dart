@@ -21,12 +21,11 @@ class ChatController extends GetxController {
 
   void onInit() {
     super.onInit();
-
-    final String? recipientId = 'someRecipientId';
+    final String? recipientId = Get.arguments?['uuid'];
     listenForMessages(recipientId ?? '');
   }
+  Future<void> listenForMessages(String recipientId) async {
 
-  void listenForMessages(String recipientId) {
     final user = _auth.currentUser;
     final senderId = user?.uid;
 
@@ -117,4 +116,3 @@ class ChatController extends GetxController {
     messageEditingController.dispose();
   }
 }
-

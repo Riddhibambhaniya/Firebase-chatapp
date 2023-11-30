@@ -6,7 +6,7 @@ import 'signin_controller.dart';
 
 class SignInPage extends GetView<SignInController> {
   final SignInController controller = Get.put(SignInController());
-
+  final SignInController signInController = Get.find<SignInController>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 

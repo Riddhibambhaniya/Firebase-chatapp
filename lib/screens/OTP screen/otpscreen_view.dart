@@ -5,10 +5,10 @@ import '../../styles/text_style.dart';
 import 'otpscreen_controller.dart';
 
 class OtpScreenView extends GetView<OtpScreenController> {
-  final OtpScreenController controller = Get.put(OtpScreenController());
 
+  final String email = Get.arguments;
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { final OtpScreenController controller = Get.put(OtpScreenController());
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,

@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../OTP screen/otpscreen_view.dart';
+import '../ResetPasswordScreen/resetPasswordScreen_view.dart';
 
 class ForgotPasswordController extends GetxController {
   RxBool isLoading = false.obs;
@@ -15,7 +16,7 @@ class ForgotPasswordController extends GetxController {
         await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
         // Navigate to the OTP screen
-        Get.off(() => OtpScreenView());
+        Get.off(() => ResetPasswordScreen(email: '',));
 
         Get.snackbar(
           'Success',

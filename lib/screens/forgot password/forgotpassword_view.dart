@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../styles/text_style.dart';
+import '../OTP Screen/otpscreen_view.dart';
 import 'forgotpassword_controller.dart';
 
 
@@ -78,7 +79,6 @@ class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
 
     if (email.isNotEmpty && GetUtils.isEmail(email)) {
       try {
-        // Check if the user with the given email exists in your Firestore users collection
         final userSnapshot = await FirebaseFirestore.instance
             .collection('users')
             .where('email', isEqualTo: email)
@@ -87,6 +87,9 @@ class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
         if (userSnapshot.docs.isNotEmpty) {
           // If the user exists, proceed with the password reset logic
           controller.resetPassword(email);
+
+          // Pass the email to the OtpScreenView
+          Get.to(() => OtpScreenView(), arguments: email);
         } else {
           Get.snackbar('Error', 'User not found', snackPosition: SnackPosition.BOTTOM);
         }
@@ -98,5 +101,6 @@ class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
       Get.snackbar('Error', 'Invalid email format', snackPosition: SnackPosition.BOTTOM);
     }
   }
+
 
 }

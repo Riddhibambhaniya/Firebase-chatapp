@@ -26,6 +26,11 @@ class MessageController extends GetxController {
       if (senderId != null) {
         isLoading.value = true;
 
+        // Fetch all users
+        final QuerySnapshot<Map<String, dynamic>> allUsers =
+        await _firestore.collection('users').get();
+
+        // Fetch last messages for the current user
         final QuerySnapshot<Map<String, dynamic>> lastMessages =
         await _firestore.collection('users/$senderId/chatwith').get();
 
@@ -49,25 +54,34 @@ class MessageController extends GetxController {
         // Clear the existing data before adding new
         userData.clear();
 
-        for (final entry in lastMessagesMap.entries) {
-          final recipientId = entry.key;
-          final lastMessage = entry.value;
+        for (final userDoc in allUsers.docs) {
+          final userId = userDoc.id;
+          final username = userDoc.get("name");
+          final profilePicture = userDoc.get("profilepicture");
 
-          final recipientData =
-          await _firestore.collection('users').doc(recipientId).get();
-
-          if (recipientData.exists) {
+          // Check if there is a last message for this user
+          if (lastMessagesMap.containsKey(userId)) {
+            final lastMessage = lastMessagesMap[userId]!;
             final timestamp = lastMessage.timestamp;
 
             if (timestamp != null) {
               userData.add(UserData(
-                userUuid: recipientId,
-                username: recipientData.get("name"),
+                userUuid: userId,
+                username: username,
                 details: lastMessage.messageContent,
-                avatar: recipientData.get("profilepicture"),
+                avatar: profilePicture,
                 lastMessageTimestamp: timestamp.toDate(),
               ));
             }
+          } else {
+            // If there is no last message, add the user with empty details
+            userData.add(UserData(
+              userUuid: userId,
+              username: username,
+              details: '', // Add default or empty details
+              avatar: profilePicture,
+              lastMessageTimestamp: null,
+            ));
           }
         }
 
@@ -82,5 +96,4 @@ class MessageController extends GetxController {
       isLoading.value = false;
     }
   }
-
 }

@@ -74,7 +74,7 @@ class ContactPage extends GetView<ContactController> {
                                 if (showHeader)
                                   Padding(
                                     padding:
-                                        const EdgeInsets.only(right: 310.0),
+                                    const EdgeInsets.only(right: 310.0),
                                     child: Text(
                                       userData.username[0],
                                       style: appbar2,
@@ -120,9 +120,9 @@ class UserRow1 extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(
                 bottom: BorderSide(
-              color: Colors.grey,
-              width: 0.5,
-            )),
+                  color: Colors.grey,
+                  width: 0.5,
+                )),
           ),
           child: Padding(
             padding: const EdgeInsets.only(right: 40.0, top: 5.0, bottom: 5.0),
@@ -140,14 +140,14 @@ class UserRow1 extends StatelessWidget {
                         : null,
                     child: (userData1.profilepicture.isEmpty)
                         ? Text(
-                            userData1.username.isNotEmpty
-                                ? userData1.username[0].toUpperCase()
-                                : '',
-                            style: TextStyle(
-                              fontSize: 15.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
+                      userData1.username.isNotEmpty
+                          ? userData1.username[0].toUpperCase()
+                          : '',
+                      style: TextStyle(
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
                         : null,
                   ),
                 ),
