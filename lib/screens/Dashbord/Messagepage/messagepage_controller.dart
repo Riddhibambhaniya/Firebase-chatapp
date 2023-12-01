@@ -4,13 +4,13 @@ import 'package:get/get.dart';
 
 import '../../../models/chatmessage.dart';
 import '../../../models/messageusermodel.dart';
+import 'mesagepage_view.dart';
 
 class MessageController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final List<UserData> userData = <UserData>[].obs;
-  RxBool isLoading = true.obs;
 
   @override
   void onInit() {
@@ -24,16 +24,11 @@ class MessageController extends GetxController {
       final senderId = user?.uid;
 
       if (senderId != null) {
-        isLoading.value = true;
-
-        // Fetch all users
-        final QuerySnapshot<Map<String, dynamic>> allUsers =
-        await _firestore.collection('users').get();
-
-        // Fetch last messages for the current user
+        // Fetch the last messages for each user
         final QuerySnapshot<Map<String, dynamic>> lastMessages =
         await _firestore.collection('users/$senderId/chatwith').get();
 
+        // Use a Map to store the last message for each user
         final Map<String, ChatMessage> lastMessagesMap = {};
 
         for (final doc in lastMessages.docs) {
@@ -42,58 +37,41 @@ class MessageController extends GetxController {
 
           final recipientId = lastMessage.recipientId;
 
+          // Check if there is a stored last message for this user
           if (!lastMessagesMap.containsKey(recipientId) ||
               lastMessage.timestamp!.toDate().isAfter(
-                lastMessagesMap[recipientId]?.timestamp?.toDate() ??
-                    DateTime(0),
+                lastMessagesMap[recipientId]?.timestamp?.toDate() ?? DateTime(0),
               )) {
             lastMessagesMap[recipientId] = lastMessage;
           }
         }
 
-        // Clear the existing data before adding new
-        userData.clear();
+        // Fetch user data and create UserData instances
+        for (final entry in lastMessagesMap.entries) {
+          final recipientId = entry.key;
+          final lastMessage = entry.value;
 
-        for (final userDoc in allUsers.docs) {
-          final userId = userDoc.id;
-          final username = userDoc.get("name");
-          final profilePicture = userDoc.get("profilepicture");
+          final recipientData =
+          await _firestore.collection('users').doc(recipientId).get();
 
-          // Check if there is a last message for this user
-          if (lastMessagesMap.containsKey(userId)) {
-            final lastMessage = lastMessagesMap[userId]!;
+          if (recipientData.exists) {
             final timestamp = lastMessage.timestamp;
 
             if (timestamp != null) {
               userData.add(UserData(
-                userUuid: userId,
-                username: username,
+                userUuid: recipientId,
+                username: recipientData.get("name"),
                 details: lastMessage.messageContent,
-                avatar: profilePicture,
-                lastMessageTimestamp: timestamp.toDate(),
+                avatar: recipientData.get("profilepicture"),
+                lastMessageTimestamp: timestamp
+                    .toDate(),
               ));
             }
-          } else {
-            // If there is no last message, add the user with empty details
-            userData.add(UserData(
-              userUuid: userId,
-              username: username,
-              details: '', // Add default or empty details
-              avatar: profilePicture,
-              lastMessageTimestamp: null,
-            ));
           }
         }
-
-        // Sort userData based on lastMessageTimestamp in descending order
-        userData.sort((a, b) =>
-            (b.lastMessageTimestamp ?? DateTime(0))
-                .compareTo(a.lastMessageTimestamp ?? DateTime(0)));
       }
     } catch (e) {
       print('Failed to fetch last messages: $e');
-    } finally {
-      isLoading.value = false;
     }
   }
 }

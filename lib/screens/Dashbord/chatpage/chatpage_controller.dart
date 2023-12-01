@@ -1,8 +1,8 @@
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:flutter/foundation.dart' as foundation;
 import '../../../models/chatmessage.dart';
@@ -19,13 +19,71 @@ class ChatController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  @override
   void onInit() {
     super.onInit();
-    final String? recipientId = Get.arguments?['uuid'];
-    listenForMessages(recipientId ?? '');
-  }
-  Future<void> listenForMessages(String recipientId) async {
 
+    final String? recipientId = 'someRecipientId';
+    listenForMessages(recipientId ?? '');
+
+    initializeLocalNotifications();
+  }
+
+  void initializeLocalNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    final InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+    );
+
+    // Set up the notification tap handling
+    // flutterLocalNotificationsPlugin.initialize(
+    //   initializationSettings,
+    //   onSelectNotification: (String? payload) async {
+    //     // Handle notification tap
+    //     print('Notification tapped with payload: $payload');
+    //   },
+    // );
+  }
+
+
+
+  Future<void> onSelectNotification(String? payload) async {
+    // Handle notification tap
+    print('Notification tapped with payload: $payload');
+  }
+
+  void showNotification(String title, String body) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotificationDetails(
+      'your_channel_id', // Change this to your channel ID
+      'Your Channel Name', // Change this to your channel name
+     // 'Your Channel Description', // Change this to your channel description
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails platformChannelSpecifics =
+    NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      title,
+      body,
+      platformChannelSpecifics,
+      payload: 'New Message', // You can add additional data to handle tap
+    );
+  }
+
+  void listenForMessages(String recipientId) {
     final user = _auth.currentUser;
     final senderId = user?.uid;
 
@@ -51,6 +109,15 @@ class ChatController extends GetxController {
           String? lastMessage =
           newMessages.isNotEmpty ? newMessages.last.messageContent : null;
           lastReceivedMessage.value = lastMessage ?? '';
+
+          // Show notification when a new message is received
+          if (newMessages.isNotEmpty) {
+            showNotification(
+              'New Message from ${user?.displayName ?? ''}',
+              newMessages.last.messageContent,
+            );
+          }
+
           updateMessagePage();
         } catch (e) {
           print('Error listening for messages: $e');
@@ -59,7 +126,8 @@ class ChatController extends GetxController {
     }
   }
 
-  Future<String?> sendMessage(String recipientId, String messageContent) async {
+  Future<String?> sendMessage(
+      String recipientId, String messageContent) async {
     try {
       final user = _auth.currentUser;
       final senderId = user?.uid;
