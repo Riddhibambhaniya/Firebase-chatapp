@@ -6,10 +6,12 @@ import 'signup_controller.dart';
 
 
 class SignUpPage extends StatelessWidget {
-  final SignUpController controller = Get.put(SignUpController());
+
 
   @override
   Widget build(BuildContext context) {
+    final SignUpController controller = Get.put(SignUpController());
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(

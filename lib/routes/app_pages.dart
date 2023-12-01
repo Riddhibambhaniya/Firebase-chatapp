@@ -11,6 +11,7 @@ import 'package:project_structure_with_getx/screens/splashscreen/splash_binding.
 import 'package:project_structure_with_getx/screens/splashscreen/splashscreen_view.dart';
 
 import '../Firebase/auth_binding.dart';
+import '../screens/My profile/myprofile_binding.dart';
 import '../screens/My profile/myprofile_view.dart';
 import 'app_routes.dart';
 
@@ -45,7 +46,7 @@ class AppPages {
     GetPage(
       name: Routes.myprofile, // Replace with your route name
       page: () => MyProfileView(),
-      binding: AuthBinding(), // Apply the AuthBinding here
+      binding: MyProfileBinding(), // Apply the AuthBinding here
     ),
 
   ];

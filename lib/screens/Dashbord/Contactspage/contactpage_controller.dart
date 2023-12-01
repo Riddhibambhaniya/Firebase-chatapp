@@ -1,12 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/src/widgets/editable_text.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../models/contectpagemodel.dart';
 
 class ContactController extends GetxController {
-  final List<UserData1> userList = [];
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final RxList<UserData1> userList = <UserData1>[].obs;
   final RxList<UserData1> searchResults = <UserData1>[].obs;
+
+  static const String userUuidKey = 'userUuid';
 
   @override
   void onInit() {
@@ -14,23 +19,47 @@ class ContactController extends GetxController {
     fetchUserList();
   }
 
+  Future<String?> getUserUuid() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(userUuidKey);
+  }
+
+  Future<void> storeUserUuid(String userUuid) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString(userUuidKey, userUuid);
+  }
+
   Future<void> fetchUserList() async {
     try {
-      if (FirebaseAuth.instance.currentUser != null) {
-        final users =
-            await FirebaseFirestore.instance.collection('users').get();
-        print('Number of user documents: ${users.docs.length}');
-        users.docs.forEach((element) {
-          userList.add(UserData1(
-              username: element
-                  .get("name"), // Provide a default value if it's nullable
-              profilepicture: element.get("profilepicture"),
-              userUuid: element.get("uuid"),
-              email: element.get("email"),
-              phonenumber: element.get("phonenumber")));
-        });
+      final String? userUuid = await getUserUuid();
 
-        update(); // Trigger UI update
+      // If userUuid is null, create and store a new one
+      if (userUuid == null) {
+        final newUserUuid = 'new_user_uuid'; // Replace with your logic to generate a new userUuid
+        await storeUserUuid(newUserUuid);
+
+        // Now you can use newUserUuid in your Firestore queries or wherever needed
+        // ...
+
+      } else {
+        // Use the stored userUuid in your Firestore queries or wherever needed
+        // ...
+
+        if (_auth.currentUser != null) {
+          final users = await FirebaseFirestore.instance.collection('users').get();
+
+          users.docs.forEach((element) {
+            userList.add(UserData1(
+              userUuid: element.get("uuid"),
+              username: element.get("name"),
+              profilepicture: element.get("profilepicture"),
+              email: element.get("email"),
+              phonenumber: element.get("phonenumber"),
+            ));
+          });
+
+          update(); // Trigger UI update
+        }
       }
     } catch (e) {
       print('Failed to fetch user list: $e');
@@ -42,7 +71,7 @@ class ContactController extends GetxController {
     if (query.isEmpty) {
     } else {
       searchResults.addAll(userList.where(
-        (user) => user.username.toLowerCase().contains(query.toLowerCase()),
+            (user) => user.username.toLowerCase().contains(query.toLowerCase()),
       ));
     }
   }

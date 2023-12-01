@@ -12,11 +12,11 @@ import '../chatpage/chatpage_view.dart';
 
 
 class MessagePage extends GetView<MessageController> {
-  final MessageController controller = Get.put(MessageController());
-
+  final myProfileController = Get.put(MyProfileController());
   @override
   Widget build(BuildContext context) {
-    final myProfileController = Get.put(MyProfileController());
+
+    final MessageController controller = Get.put(MessageController());
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(

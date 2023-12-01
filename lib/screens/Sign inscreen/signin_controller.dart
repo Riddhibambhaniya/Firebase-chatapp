@@ -19,18 +19,33 @@ class SignInController extends GetxController {
   String? validateEmail(String? value) {}
 
   String? validatePassword(String? value) {}
+
   MyProfileController myProfileController = Get.put(MyProfileController());
+
   @override
   void onInit() {
     super.onInit();
     ever(myProfileController.userEmail, (_) {
-      // This will be triggered whenever userEmail in MyProfileController changes
       if (email.value != myProfileController.userEmail.value) {
         email.value = myProfileController.userEmail.value;
         emailController.text = myProfileController.userEmail.value;
       }
     });
+
+    // Check if the user is already logged in
+    checkLoggedInUser();
   }
+
+  Future<void> checkLoggedInUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+    if (isLoggedIn) {
+      // User has logged in before, perform automatic sign-in
+      signIn();
+    }
+  }
+
   Future<void> signIn() async {
     if (validateEmail(email.value) == null &&
         validatePassword(password.value) == null) {
@@ -62,6 +77,9 @@ class SignInController extends GetxController {
               userName: userName,
               userEmail: userEmail,
             );
+
+            // Set the flag indicating that the user is logged in
+            setLoggedInFlag(true);
 
             Get.toNamed(
               '/home',
@@ -96,5 +114,10 @@ class SignInController extends GetxController {
     prefs.setString('user_uuid', uuid ?? '');
     prefs.setString('user_name', name ?? '');
     prefs.setString('user_email', email ?? '');
+  }
+
+  Future<void> setLoggedInFlag(bool value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool('isLoggedIn', value);
   }
 }
