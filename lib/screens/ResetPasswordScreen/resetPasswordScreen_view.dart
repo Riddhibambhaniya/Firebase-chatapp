@@ -5,7 +5,7 @@ import 'package:project_structure_with_getx/screens/ResetPasswordScreen/resetPas
 import '../../styles/text_style.dart';
 
 class ResetPasswordScreen extends GetView<ResetPasswordController> {
-  final ResetPasswordController controller = Get.put(ResetPasswordController());
+
   final String email;
   ResetPasswordScreen({required this.email});
   @override

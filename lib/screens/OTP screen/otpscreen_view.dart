@@ -8,7 +8,7 @@ class OtpScreenView extends GetView<OtpScreenController> {
 
   final String email = Get.arguments;
   @override
-  Widget build(BuildContext context) { final OtpScreenController controller = Get.put(OtpScreenController());
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,

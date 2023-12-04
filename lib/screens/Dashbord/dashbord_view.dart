@@ -5,8 +5,8 @@ import 'Contactspage/contactpage_view.dart';
 import 'Messagepage/mesagepage_view.dart';
 import 'dashbord_controller.dart';
 
-class DashboardScreen extends StatelessWidget {
-  final DashboardController controller = Get.put(DashboardController());
+class DashboardScreen extends GetView<DashboardController>{
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

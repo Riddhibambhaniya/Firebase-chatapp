@@ -14,7 +14,7 @@ import 'chatpage_controller.dart';
 
 class ChatPage extends GetView<ChatController> {
   final TextEditingController _messageController = TextEditingController();
-  final ChatController controller = Get.put(ChatController());
+
   bool _todaySeparatorShown = false;
   bool _yesterdaySeparatorShown = false;
 

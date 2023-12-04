@@ -11,8 +11,13 @@ import 'package:project_structure_with_getx/screens/splashscreen/splash_binding.
 import 'package:project_structure_with_getx/screens/splashscreen/splashscreen_view.dart';
 
 import '../Firebase/auth_binding.dart';
+import '../screens/Dashbord/Contactspage/contactpage_binding.dart';
+import '../screens/Dashbord/Contactspage/contactpage_view.dart';
+import '../screens/Dashbord/Messagepage/mesagepage_view.dart';
+import '../screens/Dashbord/Messagepage/messagepage_binding.dart';
 import '../screens/Dashbord/chatpage/chatpage_binding.dart';
 import '../screens/Dashbord/chatpage/chatpage_view.dart';
+import '../screens/My profile/editprofile/editprofile_view.dart';
 import '../screens/My profile/myprofile_binding.dart';
 import '../screens/My profile/myprofile_view.dart';
 import '../screens/forgot password/forgotpassword_binding.dart';
@@ -66,5 +71,15 @@ class AppPages {
       page: () => ChatPage(),
       binding: ChatBinding(),
     ),
+    GetPage(name: Routes.editprofileview,
+        page: ()=> EditProfileView(),
+        binding: MyProfileBinding())
+    ,
+    GetPage(name: Routes.MessagePage,
+        page: () => MessagePage(),
+      binding: MessageBinding(),
+    ),
+    GetPage(name:Routes.ContactPage, page: () => ContactPage(),
+      binding: ContactBinding(), )
   ];
 }

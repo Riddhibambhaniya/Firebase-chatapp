@@ -8,4 +8,7 @@ class Routes {
   static const forgotpassword = '/forgotPassword';
   static const searchscreen='/searchscreen';
   static const Chatpage='/Chatpage';
+  static const editprofileview ='/editprofileview';
+  static const MessagePage = '/MessagePage';
+  static const ContactPage = '/ContactPage';
 }

@@ -9,7 +9,7 @@ import 'forgotpassword_controller.dart';
 
 class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
   final TextEditingController emailController = TextEditingController();
-  final ForgotPasswordController controller = Get.put(ForgotPasswordController());
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

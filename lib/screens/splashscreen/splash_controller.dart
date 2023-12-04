@@ -1,31 +1,16 @@
-// import 'dart:async';
-//
-// import 'package:get/get.dart';
-//
-// import '../../routes/app_routes.dart';
-//
-//
-// class SplashController extends GetxController {
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     Future.delayed(const Duration(seconds: 3), () {
-//       Get.toNamed(Routes.onboarding);
-//     });
-//   }
-// }
-
-
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../routes/app_routes.dart';
 
-class SplashController extends GetMaterialController  {
+class SplashController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    checkUserLoginStatus();
+    // Delay the navigation to give time for the widget tree to settle
+    Future.delayed(const Duration(seconds: 3), () {
+      checkUserLoginStatus();
+    });
   }
 
   Future<void> checkUserLoginStatus() async {
@@ -37,7 +22,7 @@ class SplashController extends GetMaterialController  {
       Get.offNamed(Routes.home);
     } else {
       // User is not logged in, navigate to onboarding screen
-    Get.offNamed(Routes.onboarding);
+      Get.offNamed(Routes.onboarding);
     }
   }
 }

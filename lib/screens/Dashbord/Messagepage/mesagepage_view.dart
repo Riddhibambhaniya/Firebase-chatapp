@@ -17,7 +17,7 @@ class MessagePage extends GetView<MessageController> {
   @override
   Widget build(BuildContext context) {
 
-    final MessageController controller = Get.put(MessageController());
+   final MessageController controller = Get.put(MessageController());
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(

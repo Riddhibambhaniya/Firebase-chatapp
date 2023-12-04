@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../routes/app_routes.dart';
 import '../../../styles/colorconstants.dart';
 import '../../../styles/text_style.dart';
 import '../myprofile_controller.dart';
@@ -24,7 +25,7 @@ class EditProfileView extends GetView<MyProfileController> {
                 child: IconButton(
                   icon: Icon(Icons.arrow_back, color: ColorConstants.white),
                   onPressed: () {
-                    Get.to(() => MyProfileView());
+                    Get.to(() => Routes.myprofile);
                   },
                 ),
               ),

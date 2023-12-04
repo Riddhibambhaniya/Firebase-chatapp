@@ -5,12 +5,12 @@ import 'signup_controller.dart';
 
 
 
-class SignUpPage extends StatelessWidget {
+class SignUpPage extends GetView<SignUpController> {
 
 
   @override
   Widget build(BuildContext context) {
-    final SignUpController controller = Get.put(SignUpController());
+
 
     return Scaffold(
       body: SafeArea(

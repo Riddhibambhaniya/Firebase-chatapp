@@ -10,8 +10,7 @@ import 'editprofile/editprofile_view.dart';
 import 'myprofile_controller.dart';
 
 class MyProfileView extends GetView<MyProfileController> {
-  final MyProfileController myProfileController =
-  Get.put(MyProfileController());
+
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +121,7 @@ class MyProfileView extends GetView<MyProfileController> {
                           ),
                           onPressed: () {
                             // Navigate to the edit profile screen
-                            Get.to(() => EditProfileView());
+                            Get.to(() => Routes.editprofileview);
                           },
                           child: Text("Edit Profile"),
                         ),
