@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../routes/app_routes.dart';
 import '../../styles/text_style.dart';
 import '../forgot password/forgotpassword_view.dart';
 import 'signin_controller.dart';
 
 class SignInPage extends GetView<SignInController> {
-  final SignInController controller = Get.put(SignInController());
+  // final SignInController controller = Get.put(SignInController());
   final SignInController signInController = Get.find<SignInController>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -101,7 +102,7 @@ account or email to continue us''',
                 )),
                 SizedBox(height: 20.0),
                 TextButton(
-                  onPressed: () { Get.to(() => ForgotPasswordScreen());},
+                  onPressed: () { Get.to(() => Routes.forgotpassword);},
                   child: Text('Forgot Password?', style: textYourEmail),
                 ),
               ],

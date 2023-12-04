@@ -4,8 +4,8 @@ class Routes {
   static const login = '/login';
   static const signup = '/signup';
   static const home = '/home';
-  static const myprofile ='/profile';
-
-
-
+  static const myprofile = '/myprofile'; // Update to match the route name in AppPages
+  static const forgotpassword = '/forgotPassword';
+  static const searchscreen='/searchscreen';
+  static const Chatpage='/Chatpage';
 }

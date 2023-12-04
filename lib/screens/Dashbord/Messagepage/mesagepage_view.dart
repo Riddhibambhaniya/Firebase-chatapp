@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../models/messageusermodel.dart';
+import '../../../routes/app_routes.dart';
 import '../../../styles/text_style.dart';
 import '../../My profile/myprofile_controller.dart';
 import '../../My profile/myprofile_view.dart';
@@ -34,7 +35,7 @@ class MessagePage extends GetView<MessageController> {
             actions: [
               GestureDetector(
                 onTap: () {
-                  Get.to(() => MyProfileView());
+                  Get.to(() => Routes.myprofile);
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 24.0),
@@ -118,7 +119,7 @@ class UserRow extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        Get.to(() => ChatPage(), arguments: {
+        Get.to(() =>  Routes.Chatpage, arguments: {
           'uuid': userData.userUuid,
           'name': userData.username,
           'email': userData.details,

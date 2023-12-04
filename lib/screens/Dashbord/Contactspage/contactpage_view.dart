@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../models/contectpagemodel.dart';
+import '../../../routes/app_routes.dart';
 import '../../../styles/text_style.dart';
 import '../../Sign inscreen/signin_controller.dart';
 import '../../searchscreen/searchscreen_view.dart';
@@ -12,7 +13,7 @@ import 'contactpage_controller.dart';
 
 class ContactPage extends GetView<ContactController> {
   final ContactController controller = Get.put(ContactController());
-  final SignInController signInController = Get.find<SignInController>();
+  final SignInController signInController = Get.put(SignInController()); // Initialize SignInController
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +27,7 @@ class ContactPage extends GetView<ContactController> {
               padding: const EdgeInsets.only(left:24.0),
               child: IconButton(
                 icon: Icon(Icons.search, color: Colors.white),
-                onPressed: () => Get.to(() => SearchScreen()),
+                onPressed: () => Get.to(() => Routes.searchscreen),
               ),
             ),
             title:  Padding(
@@ -118,7 +119,7 @@ class UserRow1 extends StatelessWidget {
     return GestureDetector(
         onTap: () {
       // Navigate to the ChatPage with user details
-      Get.to(() => ChatPage(), arguments: {
+      Get.to(() =>  Routes.Chatpage, arguments: {
         'uuid': userData1.userUuid, // Assuming you have a userUuid property in UserData1
         'name': userData1.username,
         'email': userData1.email,

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:project_structure_with_getx/screens/Dashbord/dashbord_view.dart';
 import 'package:project_structure_with_getx/styles/colorconstants.dart';
 
+import '../../routes/app_routes.dart';
 import '../../styles/text_style.dart';
 
 import 'editprofile/editprofile_view.dart';
@@ -25,7 +26,7 @@ class MyProfileView extends GetView<MyProfileController> {
                 child: IconButton(
                   icon: Icon(Icons.arrow_back, color: ColorConstants.white),
                   onPressed: () {
-                    Get.to(() => DashboardScreen());
+                    Get.to(() =>  Routes.home);
                   },
                 ),
               ),

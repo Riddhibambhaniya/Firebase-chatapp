@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../routes/app_routes.dart';
 import '../../styles/text_style.dart';
 import '../../utils/imagepath.dart';
 import 'on bording_controller.dart';
@@ -78,7 +79,9 @@ connected with friends and family.''',
                       ),
                     ),
                     onPressed: () {
-                      Get.toNamed('/signup'); // Navigate to the sign-up page
+                      Future.delayed(Duration.zero, () {
+                        Get.toNamed(Routes.signup); // Navigate to the sign-up page
+                      });
                     },
                     child: Text('Sign up withn mail', style: textBolds),
                   ),
@@ -97,7 +100,7 @@ connected with friends and family.''',
                       ),
                       TextButton(
                         onPressed: () {
-                          Get.toNamed('/login');
+                          Get.toNamed( Routes.login);
                         },
                         child: Padding(
                           padding: const EdgeInsets.only(top: 4.0),

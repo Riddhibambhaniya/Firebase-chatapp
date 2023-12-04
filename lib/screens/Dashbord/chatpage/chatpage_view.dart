@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import 'package:flutter/foundation.dart' as foundation;
 import '../../../models/chatmessage.dart';
+import '../../../routes/app_routes.dart';
 import '../../../styles/text_style.dart';
 import '../dashbord_view.dart';
 import 'chatpage_controller.dart';
@@ -49,7 +50,7 @@ class ChatPage extends GetView<ChatController> {
           child: IconButton(
             icon: Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () {
-              Get.to(() => DashboardScreen());
+              Get.to(() => Routes.home);
             },
           ),
         ),

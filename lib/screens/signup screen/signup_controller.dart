@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../routes/app_routes.dart';
+
 
 class SignUpController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -117,7 +119,7 @@ class SignUpController extends GetxController {
 
         // Now you have associated the UUID with the user in Firestore
 
-        Get.toNamed('/home');
+        Get.toNamed(Routes.home);
       } catch (e) {
         print('Registration failed: $e');
       }
