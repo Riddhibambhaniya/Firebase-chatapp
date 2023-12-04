@@ -1,35 +1,44 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:flutter/foundation.dart' as foundation;
 import '../../../models/chatmessage.dart';
 import '../Messagepage/messagepage_controller.dart';
 
 class ChatController extends GetxController {
   RxString lastReceivedMessage = ''.obs;
   RxString lastSentMessage = ''.obs;
-
   final messages = <ChatMessage>[].obs;
   var isTextInputOpen = false.obs;
   final messageEditingController = TextEditingController();
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
+  RxBool noChatHistory = false.obs; // Flag to track chat history
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
-
     final String? recipientId = 'someRecipientId';
+    await initializeChatHistoryFlag(); // Initialize chat history flag
     listenForMessages(recipientId ?? '');
 
     initializeLocalNotifications();
+  }
+
+  Future<void> initializeChatHistoryFlag() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasChatHistory = prefs.getBool('hasChatHistory') ?? false;
+
+    // If the user has no chat history, set the flag to true
+    if (!hasChatHistory) {
+      noChatHistory.value = true;
+      prefs.setBool('hasChatHistory', true);
+    }
   }
 
   void initializeLocalNotifications() async {
@@ -43,21 +52,9 @@ class ChatController extends GetxController {
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
     );
-
-    // Set up the notification tap handling
-    // flutterLocalNotificationsPlugin.initialize(
-    //   initializationSettings,
-    //   onSelectNotification: (String? payload) async {
-    //     // Handle notification tap
-    //     print('Notification tapped with payload: $payload');
-    //   },
-    // );
   }
 
-
-
   Future<void> onSelectNotification(String? payload) async {
-    // Handle notification tap
     print('Notification tapped with payload: $payload');
   }
 
@@ -66,7 +63,7 @@ class ChatController extends GetxController {
     AndroidNotificationDetails(
       'your_channel_id', // Change this to your channel ID
       'Your Channel Name', // Change this to your channel name
-     // 'Your Channel Description', // Change this to your channel description
+      // 'Your Channel Description', // Change this to your channel description
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -79,7 +76,7 @@ class ChatController extends GetxController {
       title,
       body,
       platformChannelSpecifics,
-      payload: 'New Message', // You can add additional data to handle tap
+      payload: 'New Message',
     );
   }
 
@@ -109,6 +106,12 @@ class ChatController extends GetxController {
           String? lastMessage =
           newMessages.isNotEmpty ? newMessages.last.messageContent : null;
           lastReceivedMessage.value = lastMessage ?? '';
+
+          if (messages.isEmpty) {
+            noChatHistory.value = true;
+          } else {
+            noChatHistory.value = false;
+          }
 
           // Show notification when a new message is received
           if (newMessages.isNotEmpty) {
@@ -161,7 +164,6 @@ class ChatController extends GetxController {
         lastSentMessage.value = messageContent;
         messageEditingController.clear();
 
-        // Fetch updated messages and trigger MessagePage update
         Get.find<MessageController>().fetchLastMessages();
         updateMessagePage();
 
@@ -173,7 +175,6 @@ class ChatController extends GetxController {
     }
   }
 
-  // Helper function to trigger MessagePage update
   void updateMessagePage() {
     Get.find<MessageController>().update();
   }

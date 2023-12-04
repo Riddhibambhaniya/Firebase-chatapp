@@ -13,11 +13,11 @@ import '../chatpage/chatpage_view.dart';
 
 
 class MessagePage extends GetView<MessageController> {
-  final myProfileController = Get.put(MyProfileController());
+  final MessageController controller = Get.put(MessageController());
+
   @override
   Widget build(BuildContext context) {
-
-   final MessageController controller = Get.put(MessageController());
+    final myProfileController = Get.put(MyProfileController());
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -35,7 +35,7 @@ class MessagePage extends GetView<MessageController> {
             actions: [
               GestureDetector(
                 onTap: () {
-                  Get.to(() => Routes.myprofile);
+                  Get.to(() => MyProfileView());
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 24.0),
@@ -120,7 +120,7 @@ class UserRow extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         Get.to(() =>  Routes.Chatpage, arguments: {
-          'uuid': userData.userUuid,
+          'uuid': userData.userUuid, // Assuming you have a userUuid property in UserData1
           'name': userData.username,
           'email': userData.details,
         });

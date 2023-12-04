@@ -119,11 +119,11 @@ class UserRow1 extends StatelessWidget {
     return GestureDetector(
         onTap: () {
       // Navigate to the ChatPage with user details
-      Get.to(() =>  Routes.Chatpage, arguments: {
-        'uuid': userData1.userUuid, // Assuming you have a userUuid property in UserData1
-        'name': userData1.username,
-        'email': userData1.email,
-      });
+          Get.to(() => ChatPage(), arguments: {
+            'uuid': userData1.userUuid, // Assuming you have a userUuid property in UserData1
+            'name': userData1.username,
+            'email': userData1.email,
+          });
     },
     child: Container(
       decoration: BoxDecoration(
