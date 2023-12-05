@@ -31,7 +31,8 @@ class ContactController extends GetxController {
               profilepicture: element.get("profilepicture"),
               userUuid: element.get("uuid"),
               email: element.get("email"),
-              phonenumber: element.get("phonenumber")
+              phonenumber: element.get("phonenumber"),
+
           )
           );
         });

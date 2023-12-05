@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatMessage {
-  final String senderId;
+  late final String senderId;
   final String recipientId;
   final String messageContent;
   final Timestamp timestamp;
-  final String senderName;
+  late final String senderName;
 
   ChatMessage({
     required this.senderId,

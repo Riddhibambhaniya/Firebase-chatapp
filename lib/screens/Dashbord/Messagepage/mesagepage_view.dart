@@ -1,23 +1,21 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../models/messageusermodel.dart';
-import '../../../routes/app_routes.dart';
+import '../../../models/chatmessage.dart';
 import '../../../styles/text_style.dart';
 import '../../My profile/myprofile_controller.dart';
 import '../../My profile/myprofile_view.dart';
 import '../../searchscreen/searchscreen_view.dart';
+import '../Chatpage/chatpage_view.dart';
 import 'messagepage_controller.dart';
-import '../chatpage/chatpage_view.dart';
-
-
 
 class MessagePage extends GetView<MessageController> {
   final MessageController controller = Get.put(MessageController());
 
   @override
   Widget build(BuildContext context) {
-    final myProfileController = Get.put(MyProfileController());
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -52,12 +50,11 @@ class MessagePage extends GetView<MessageController> {
                           : null,
                       child: userProfilePic.isEmpty
                           ? Text(
-                        userName.isNotEmpty
-                            ? userName[0].toUpperCase()
-                            : '',
+                        userName.isNotEmpty ? userName[0].toUpperCase() : '',
                         style: TextStyle(
                           fontSize: 20.0,
-                          fontWeight: FontWeight.bold,color:Colors.black,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       )
                           : null,
@@ -81,12 +78,22 @@ class MessagePage extends GetView<MessageController> {
               ),
               width: 400,
               height: 1000,
-              child: ListView.separated(
-                itemCount: controller.userData.length,
-                separatorBuilder: (context, index) => SizedBox(height: 15.0),
-                itemBuilder: (context, index) {
-                  return UserRow(userData: controller.userData[index]);
-                },
+              child: Obx(
+                    () => ListView.separated(
+                  itemCount: controller.lastMessages.length,
+                  separatorBuilder: (context, index) => SizedBox(height: 15.0),
+                  itemBuilder: (context, index) {
+                    final lastMessage = controller.lastMessages[index];
+                    final otherUserId = lastMessage.senderId;
+
+                    return UserRow(lastMessage: lastMessage, onTap: () {
+                      Get.to(() => ChatPage(), arguments: {
+                        'uuid': otherUserId,
+                        'name': otherUserId, // Replace with the actual username
+                      });
+                    });
+                  },
+                ),
               ),
             ),
           ),
@@ -96,11 +103,11 @@ class MessagePage extends GetView<MessageController> {
   }
 }
 
-
 class UserRow extends StatelessWidget {
-  final UserData userData;
+  final ChatMessage lastMessage;
+  final VoidCallback onTap;
 
-  UserRow({required this.userData});
+  UserRow({required this.lastMessage, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -108,8 +115,8 @@ class UserRow extends StatelessWidget {
     final now = DateTime.now();
 
     // Calculate the time difference
-    final timeDifference = userData.lastMessageTimestamp != null
-        ? now.difference(userData.lastMessageTimestamp!)
+    final timeDifference = lastMessage.timestamp != null
+        ? now.difference(lastMessage.timestamp! as DateTime)
         : Duration.zero;
 
     // Format the time difference using intl package
@@ -118,13 +125,7 @@ class UserRow extends StatelessWidget {
         : 'just now';
 
     return GestureDetector(
-      onTap: () {
-        Get.to(() =>  Routes.Chatpage, arguments: {
-          'uuid': userData.userUuid, // Assuming you have a userUuid property in UserData1
-          'name': userData.username,
-          'email': userData.details,
-        });
-      },
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.only(left: 9.0, right: 9.0, bottom: 15.0, top: 0.0),
         child: Container(
@@ -136,28 +137,22 @@ class UserRow extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 25.0,
                   backgroundColor: Colors.black,
-                  backgroundImage: userData.avatar.isNotEmpty
-                      ? AssetImage(userData.avatar)
-                      : null,
-                  child: userData.avatar.isEmpty
-                      ? Text(
-                    userData.username.isNotEmpty
-                        ? userData.username[0].toUpperCase()
-                        : '',
+                  backgroundImage: AssetImage('assets/default_profile_picture.jpg'),
+                  child: Text(
+                    lastMessage.senderId[0].toUpperCase(),
                     style: TextStyle(
                       fontSize: 15.0,
                       fontWeight: FontWeight.bold,
                     ),
-                  )
-                      : null,
+                  ),
                 ),
               ),
               SizedBox(width: 20.0),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(userData.username, style: appbar2),
-                  Text(userData.details, style: appbar1),
+                  Text(lastMessage.senderId, style: appbar2),
+                  Text(lastMessage.messageContent ?? '', style: appbar1),
                 ],
               ),
               Spacer(),
@@ -172,3 +167,4 @@ class UserRow extends StatelessWidget {
     );
   }
 }
+
