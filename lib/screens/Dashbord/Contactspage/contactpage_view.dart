@@ -27,7 +27,7 @@ class ContactPage extends GetView<ContactController> {
               padding: const EdgeInsets.only(left:24.0),
               child: IconButton(
                 icon: Icon(Icons.search, color: Colors.white),
-                onPressed: () => Get.to(() => Routes.searchscreen),
+                onPressed: () => Get.to(() => SearchScreen()),
               ),
             ),
             title:  Padding(
@@ -172,3 +172,9 @@ class UserRow1 extends StatelessWidget {
     ) );
   }
 }
+
+
+
+
+
+

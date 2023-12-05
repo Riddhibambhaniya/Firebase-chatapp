@@ -18,6 +18,8 @@ class ChatPage extends GetView<ChatController> {
   bool _todaySeparatorShown = false;
   bool _yesterdaySeparatorShown = false;
 
+
+
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic>? userData = Get.arguments;
@@ -87,81 +89,67 @@ class ChatPage extends GetView<ChatController> {
       body: Column(
         children: <Widget>[
           Expanded(
-            child: Obx(() {
-              if (controller.messages.isEmpty) {
-                // Display a message when the chat history is empty
-                return Center(
-                  child: Text(
-                    'No chat history with ${displayName ?? ""}',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                );
-              } else {
-                // Display the chat messages
-                return ListView.builder(
-                  reverse: true,
-                  itemCount: controller.messages.length,
-                  itemBuilder: (context, index) {
-                    final reversedIndex =
-                        controller.messages.length - 1 - index;
-                    final message = controller.messages[reversedIndex];
-                    final isUserMessage = message.senderId == senderId;
+            child: Obx(() => ListView.builder(
+              reverse: true,
+              itemCount: controller.messages.length,
+              itemBuilder: (context, index) {
+                final reversedIndex = controller.messages.length - 1 - index;
+                final message = controller.messages[reversedIndex];
+                final isUserMessage = message.senderId == senderId;
 
-                    // Show the date separator for today only once
-                    if (isTodayMessage(message) && !_todaySeparatorShown) {
-                      _todaySeparatorShown = true;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Center(
-                              child: Text(
-                                'Today',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 17,
-                                ),
-                              ),
+                // Show the date separator for today only once
+                if (isTodayMessage(message) && !_todaySeparatorShown) {
+                  _todaySeparatorShown = true;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Center(
+                          child: Text(
+                            'Today',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17,
                             ),
                           ),
-                          // Message widget
-                          buildMessageWidget(message, isUserMessage),
-                        ],
-                      );
-                    } else if (isYesterdayMessage(message) &&
-                        !_yesterdaySeparatorShown) {
-                      // Show the date separator for yesterday only once
-                      _yesterdaySeparatorShown = true;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Center(
-                              child: Text(
-                                'Yesterday',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 17,
-                                ),
-                              ),
+                        ),
+                      ),
+                      // Message widget
+                      buildMessageWidget(message, isUserMessage),
+                    ],
+                  );
+                } else if (isYesterdayMessage(message) &&
+                    !_yesterdaySeparatorShown) {
+                  // Show the date separator for yesterday only once
+                  _yesterdaySeparatorShown = true;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Center(
+                          child: Text(
+                            'Yesterday',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17,
                             ),
                           ),
-                          // Message widget
-                          buildMessageWidget(message, isUserMessage),
-                        ],
-                      );
-                    } else {
-                      // Only show the message widget for other dates
-                      return buildMessageWidget(message, isUserMessage);
-                    }
-                  },
-                );
-              }
-            }),
+                        ),
+                      ),
+                      // Message widget
+                      buildMessageWidget(message, isUserMessage),
+                    ],
+                  );
+                } else {
+                  // Only show the message widget for other dates
+                  return buildMessageWidget(message, isUserMessage);
+                }
+              },
+            )),
           ),
           Align(
             alignment: Alignment.bottomCenter,
@@ -169,27 +157,25 @@ class ChatPage extends GetView<ChatController> {
               padding: const EdgeInsets.all(10.0),
               child: Row(
                 children: [
+
                   IconButton(
                     icon: Icon(Icons.emoji_emotions),
                     onPressed: () {
                       // Open EmojiPicker when the emoji button is pressed
                       Get.bottomSheet(
                         Container(
-                          height:
-                              300, // Set a fixed height for the bottom sheet
+                          height: 300, // Set a fixed height for the bottom sheet
                           child: EmojiPicker(
-                              onEmojiSelected:
-                                  (Category? category, Emoji? emoji) {
+                              onEmojiSelected: (Category? category, Emoji? emoji) {
                                 if (category != null && emoji != null) {
-                                  _messageController.text =
-                                      _messageController.text + emoji.emoji;
+                                  _messageController.text = _messageController.text + emoji.emoji;
                                 }
                               },
                               config: Config(
                                 columns: 7,
                                 emojiSizeMax: 32 *
                                     (foundation.defaultTargetPlatform ==
-                                            TargetPlatform.iOS
+                                        TargetPlatform.iOS
                                         ? 1.30
                                         : 1.0),
                                 verticalSpacing: 0,
@@ -209,8 +195,7 @@ class ChatPage extends GetView<ChatController> {
                                 replaceEmojiOnLimitExceed: false,
                                 noRecents: const Text(
                                   'No Recents',
-                                  style: TextStyle(
-                                      fontSize: 20, color: Colors.black26),
+                                  style: TextStyle(fontSize: 20, color: Colors.black26),
                                   textAlign: TextAlign.center,
                                 ),
                                 loadingIndicator: const SizedBox.shrink(),
@@ -218,11 +203,18 @@ class ChatPage extends GetView<ChatController> {
                                 categoryIcons: const CategoryIcons(),
                                 buttonMode: ButtonMode.MATERIAL,
                                 checkPlatformCompatibility: true,
-                              )),
+                              )
+
+                          ),
                         ),
                       );
                     },
                   ),
+
+
+
+
+
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
@@ -246,7 +238,9 @@ class ChatPage extends GetView<ChatController> {
                         onFieldSubmitted: (message) {
                           controller.sendMessage(userData?['uuid'], message);
                         },
-                        onChanged: (message) {},
+                        onChanged: (message) {
+
+                        },
                       ),
                     ),
                   ),
@@ -279,6 +273,7 @@ class ChatPage extends GetView<ChatController> {
             ),
           ),
           // EmojiPicker widget
+
         ],
       ),
     );

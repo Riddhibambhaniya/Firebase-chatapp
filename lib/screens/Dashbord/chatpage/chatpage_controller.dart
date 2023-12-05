@@ -1,44 +1,35 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter/foundation.dart' as foundation;
 import '../../../models/chatmessage.dart';
 import '../Messagepage/messagepage_controller.dart';
 
 class ChatController extends GetxController {
   RxString lastReceivedMessage = ''.obs;
   RxString lastSentMessage = ''.obs;
+
   final messages = <ChatMessage>[].obs;
   var isTextInputOpen = false.obs;
   final messageEditingController = TextEditingController();
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
-  RxBool noChatHistory = false.obs; // Flag to track chat history
 
   @override
-  void onInit() async {
+  void onInit() {
     super.onInit();
+
     final String? recipientId = 'someRecipientId';
-    await initializeChatHistoryFlag(); // Initialize chat history flag
     listenForMessages(recipientId ?? '');
 
     initializeLocalNotifications();
-  }
-
-  Future<void> initializeChatHistoryFlag() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool hasChatHistory = prefs.getBool('hasChatHistory') ?? false;
-
-    // If the user has no chat history, set the flag to true
-    if (!hasChatHistory) {
-      noChatHistory.value = true;
-      prefs.setBool('hasChatHistory', true);
-    }
   }
 
   void initializeLocalNotifications() async {
@@ -52,9 +43,21 @@ class ChatController extends GetxController {
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
     );
+
+    // Set up the notification tap handling
+    // flutterLocalNotificationsPlugin.initialize(
+    //   initializationSettings,
+    //   onSelectNotification: (String? payload) async {
+    //     // Handle notification tap
+    //     print('Notification tapped with payload: $payload');
+    //   },
+    // );
   }
 
+
+
   Future<void> onSelectNotification(String? payload) async {
+    // Handle notification tap
     print('Notification tapped with payload: $payload');
   }
 
@@ -63,7 +66,7 @@ class ChatController extends GetxController {
     AndroidNotificationDetails(
       'your_channel_id', // Change this to your channel ID
       'Your Channel Name', // Change this to your channel name
-      // 'Your Channel Description', // Change this to your channel description
+     // 'Your Channel Description', // Change this to your channel description
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -76,7 +79,7 @@ class ChatController extends GetxController {
       title,
       body,
       platformChannelSpecifics,
-      payload: 'New Message',
+      payload: 'New Message', // You can add additional data to handle tap
     );
   }
 
@@ -85,7 +88,10 @@ class ChatController extends GetxController {
     final senderId = user?.uid;
 
     if (senderId != null) {
-      String chatCollectionPath = 'users/$recipientId/chatwith';
+      // Create a unique chat ID based on user IDs
+      String chatId = getChatId(senderId, recipientId);
+
+      String chatCollectionPath = 'chats/$chatId/messages';
 
       _firestore
           .collection(chatCollectionPath)
@@ -107,12 +113,6 @@ class ChatController extends GetxController {
           newMessages.isNotEmpty ? newMessages.last.messageContent : null;
           lastReceivedMessage.value = lastMessage ?? '';
 
-          if (messages.isEmpty) {
-            noChatHistory.value = true;
-          } else {
-            noChatHistory.value = false;
-          }
-
           // Show notification when a new message is received
           if (newMessages.isNotEmpty) {
             showNotification(
@@ -129,15 +129,17 @@ class ChatController extends GetxController {
     }
   }
 
-  Future<String?> sendMessage(
-      String recipientId, String messageContent) async {
+  Future<String?> sendMessage(String recipientId, String messageContent) async {
     try {
       final user = _auth.currentUser;
       final senderId = user?.uid;
       final senderName = user?.displayName ?? 'You';
 
       if (senderId != null) {
-        String chatCollectionPath = 'users/$recipientId/chatwith';
+        // Create a unique chat ID based on user IDs
+        String chatId = getChatId(senderId, recipientId);
+
+        String chatCollectionPath = 'chats/$chatId/messages';
 
         DocumentReference documentReference =
         await _firestore.collection(chatCollectionPath).add({
@@ -151,20 +153,11 @@ class ChatController extends GetxController {
 
         String documentId = documentReference.id;
 
-        String senderChatCollectionPath = 'users/$senderId/chatwith';
-        await _firestore.collection(senderChatCollectionPath).add({
-          'senderId': senderId,
-          'recipientId': recipientId,
-          'messageContent': messageContent,
-          'timestamp': FieldValue.serverTimestamp(),
-          'senderName': senderName,
-          'last-message': messageContent,
-        });
-
         lastSentMessage.value = messageContent;
         messageEditingController.clear();
 
-        Get.find<MessageController>().fetchLastMessages();
+        // Fetch updated messages and trigger MessagePage update
+        listenForMessages(recipientId);
         updateMessagePage();
 
         return documentId;
@@ -175,6 +168,13 @@ class ChatController extends GetxController {
     }
   }
 
+// Helper function to get a unique chat ID based on user IDs
+  String getChatId(String userId1, String userId2) {
+    List<String> sortedIds = [userId1, userId2]..sort();
+    return sortedIds.join('_');
+  }
+
+  // Helper function to trigger MessagePage update
   void updateMessagePage() {
     Get.find<MessageController>().update();
   }
