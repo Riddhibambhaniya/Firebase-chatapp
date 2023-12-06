@@ -69,6 +69,7 @@ class MessagePage extends GetView<MessageController> {
             left: 0,
             right: 0,
             child: Container(
+              //height: MediaQuery.of(context).size.height - 120.0,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30.0),
@@ -96,7 +97,7 @@ class MessagePage extends GetView<MessageController> {
 }
 
 class UserRow extends StatelessWidget {
-  late final UserData1 userData1;
+   final UserData1 userData1;
 
   UserRow({required this.userData1});
 

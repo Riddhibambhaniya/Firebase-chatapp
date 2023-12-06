@@ -9,13 +9,14 @@ class MessageController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  final List<UserData1> userData = <UserData1>[].obs;
+  final RxList<UserData1> userData = <UserData1>[].obs;
 
   @override
   void onInit() {
     super.onInit();
     fetchCurrentUserLastMessages();
   }
+
   String getChatId(String userId1, String userId2) {
     List<String> sortedIds = [userId1, userId2]..sort();
     return sortedIds.join('_');
@@ -92,6 +93,7 @@ class MessageController extends GetxController {
       return null;
     }
   }
+
 }
 
 
