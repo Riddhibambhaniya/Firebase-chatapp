@@ -1,15 +1,15 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../models/chatmessage.dart';
+import '../../../models/contectpagemodel.dart';
+
 import '../../../styles/text_style.dart';
 import '../../My profile/myprofile_controller.dart';
 import '../../My profile/myprofile_view.dart';
 import '../../searchscreen/searchscreen_view.dart';
-import '../Chatpage/chatpage_view.dart';
+
 import 'messagepage_controller.dart';
+import '../chatpage/chatpage_view.dart';
 
 class MessagePage extends GetView<MessageController> {
   final MessageController controller = Get.put(MessageController());
@@ -80,18 +80,10 @@ class MessagePage extends GetView<MessageController> {
               height: 1000,
               child: Obx(
                     () => ListView.separated(
-                  itemCount: controller.lastMessages.length,
+                  itemCount: controller.userData.length,
                   separatorBuilder: (context, index) => SizedBox(height: 15.0),
                   itemBuilder: (context, index) {
-                    final lastMessage = controller.lastMessages[index];
-                    final otherUserId = lastMessage.senderId;
-
-                    return UserRow(lastMessage: lastMessage, onTap: () {
-                      Get.to(() => ChatPage(), arguments: {
-                        'uuid': otherUserId,
-                        'name': otherUserId, // Replace with the actual username
-                      });
-                    });
+                    return UserRow(userData1: controller.userData[index]);
                   },
                 ),
               ),
@@ -104,61 +96,70 @@ class MessagePage extends GetView<MessageController> {
 }
 
 class UserRow extends StatelessWidget {
-  final ChatMessage lastMessage;
-  final VoidCallback onTap;
+  late final UserData1 userData1;
 
-  UserRow({required this.lastMessage, required this.onTap});
+  UserRow({required this.userData1});
 
   @override
   Widget build(BuildContext context) {
-    // Get the current time
-    final now = DateTime.now();
-
-    // Calculate the time difference
-    final timeDifference = lastMessage.timestamp != null
-        ? now.difference(lastMessage.timestamp! as DateTime)
-        : Duration.zero;
-
-    // Format the time difference using intl package
-    final formattedTimeDifference = timeDifference.inMinutes > 0
-        ? '${timeDifference.inMinutes} min ago'
-        : 'just now';
-
     return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 9.0, right: 9.0, bottom: 15.0, top: 0.0),
-        child: Container(
-          color: Colors.white,
+      onTap: () {
+        // Navigate to the ChatPage with user details
+        Get.to(() => ChatPage(), arguments: {
+          'uuid': userData1.userUuid, // Assuming you have a userUuid property in UserData1
+          'name': userData1.username,
+          'email': userData1.email,
+        });
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(right: 40.0, top: 5.0, bottom: 5.0),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 15.0),
+                padding: const EdgeInsets.only(left: 30.0, right: 10.0, bottom: 5.0),
                 child: CircleAvatar(
                   radius: 25.0,
                   backgroundColor: Colors.black,
-                  backgroundImage: AssetImage('assets/default_profile_picture.jpg'),
-                  child: Text(
-                    lastMessage.senderId[0].toUpperCase(),
+                  backgroundImage: (userData1.profilepicture.isNotEmpty)
+                      ? AssetImage(userData1.profilepicture)
+                      : null,
+                  child: (userData1.profilepicture.isEmpty)
+                      ? Text(
+                    userData1.username.isNotEmpty
+                        ? userData1.username[0].toUpperCase()
+                        : '',
                     style: TextStyle(
                       fontSize: 15.0,
                       fontWeight: FontWeight.bold,
                     ),
-                  ),
+                  )
+                      : null,
                 ),
               ),
-              SizedBox(width: 20.0),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(lastMessage.senderId, style: appbar2),
-                  Text(lastMessage.messageContent ?? '', style: appbar1),
-                ],
-              ),
-              Spacer(),
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: Text(formattedTimeDifference),
+              SizedBox(width: 10.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(userData1.username, style: appbar2),
+                    Text(
+                      userData1.lastMessageContent ?? '', // Display last message content
+                      style: appbar1,
+                    ),
+                    Text(
+                      userData1.lastMessageTimestamp != null
+                          ? '${_formatTimestamp(userData1.lastMessageTimestamp!)} ago'
+                          : '',
+                      style: appbar1,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -166,5 +167,16 @@ class UserRow extends StatelessWidget {
       ),
     );
   }
-}
 
+  String _formatTimestamp(DateTime timestamp) {
+    // You can use your own logic to format the timestamp as needed
+    // For example, using the intl package for more sophisticated formatting
+    // Here, we'll just show the minutes ago as in your existing code
+    final now = DateTime.now();
+    final timeDifference = now.difference(timestamp);
+
+    return timeDifference.inMinutes > 0
+        ? '${timeDifference.inMinutes} min'
+        : 'just now';
+  }
+}

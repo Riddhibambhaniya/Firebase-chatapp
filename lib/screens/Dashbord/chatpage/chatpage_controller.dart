@@ -95,7 +95,7 @@ class ChatController extends GetxController {
 
       _firestore
           .collection(chatCollectionPath)
-          .orderBy('timestamp', descending: false)
+          .orderBy('timestamp', descending: true)
           .snapshots()
           .listen((querySnapshot) {
         try {

@@ -1,174 +1,99 @@
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:get/get.dart';
-//
-// import '../../../models/chatmessage.dart';
-// import '../../../models/contectpagemodel.dart';
-//
-// class MessageController extends GetxController {
-//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-//   final FirebaseAuth _auth = FirebaseAuth.instance;
-//
-//   final List<UserData1> userData = <UserData1>[].obs;
-//
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     fetchCurrentUserLastMessages();
-//   }
-//
-//   Future<void> fetchCurrentUserLastMessages() async {
-//     try {
-//       final user = _auth.currentUser;
-//       final senderId = user?.uid;
-//
-//       if (senderId != null) {
-//         userData.clear();
-//
-//         final lastMessages = await _firestore.collection('users/$senderId/chatwith').get();
-//
-//         print('Number of last messages: ${lastMessages.docs.length}');
-//
-//         final Map<String, ChatMessage> lastMessagesMap = {};
-//
-//         for (final doc in lastMessages.docs) {
-//           final data = doc.data();
-//           final lastMessage = ChatMessage.fromMap(data!);
-//
-//           final recipientId = lastMessage.recipientId;
-//
-//           if (!lastMessagesMap.containsKey(recipientId) ||
-//               lastMessage.timestamp!.toDate().isAfter(
-//                 lastMessagesMap[recipientId]?.timestamp?.toDate() ?? DateTime(0),
-//               )) {
-//             lastMessagesMap[recipientId] = lastMessage;
-//           }
-//         }
-//
-//         for (final entry in lastMessagesMap.entries) {
-//           final recipientId = entry.key;
-//           final lastMessage = entry.value;
-//
-//           final recipientData = await _firestore.collection('users').doc(recipientId).get();
-//
-//           if (recipientData.exists) {
-//             final timestamp = lastMessage.timestamp;
-//
-//             if (timestamp != null) {
-//               userData.add(UserData1(
-//                 userUuid: recipientId,
-//                 username: recipientData.get("name"),
-//                 profilepicture: recipientData.get("profilepicture"),
-//                 email: recipientData.get("email"),
-//                 phonenumber: recipientData.get("phonenumber"),
-//                 lastMessageContent: lastMessage.messageContent,
-//                 lastMessageTimestamp: timestamp.toDate(),
-//               ));
-//             }
-//           }
-//         }
-//
-//         print('Number of user data items: ${userData.length}');
-//
-//         update(); // Trigger UI update
-//       }
-//     } catch (e) {
-//       print('Failed to fetch last messages: $e');
-//     }
-//   }
-//
-// }
-
-
-
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 
-import 'package:flutter/foundation.dart' as foundation;
-import '../../../models/chatmessage.dart';
-import '../Chatpage/chatpage_view.dart';
+
+import '../../../models/contectpagemodel.dart';
 
 class MessageController extends GetxController {
-  final messages = <ChatMessage>[].obs;
-  final lastMessages = <ChatMessage>[].obs;
-  var isTextInputOpen = false.obs;
-  final messageEditingController = TextEditingController();
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  final List<UserData1> userData = <UserData1>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    listenForMessages();
+    fetchCurrentUserLastMessages();
   }
+  String getChatId(String userId1, String userId2) {
+    List<String> sortedIds = [userId1, userId2]..sort();
+    return sortedIds.join('_');
+  }
+  Future<void> fetchCurrentUserLastMessages() async {
+    try {
+      final user = _auth.currentUser;
+      final senderId = user?.uid;
 
-  void listenForMessages() {
-    final user = _auth.currentUser;
-    final senderId = user?.uid;
+      if (senderId != null) {
+        userData.clear();
 
-    if (senderId != null) {
-      _firestore
-          .collection('chats')
-          .where('members', arrayContains: senderId)
-          .snapshots()
-          .listen((querySnapshot) async {
-        try {
-          final List<ChatMessage> newLastMessages = [];
+        final lastMessages = await _firestore.collection('users/$senderId/chatwith').get();
 
-          for (final doc in querySnapshot.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            final chatId = data['chatId'] as String;
-            final members = data['members'] as List<String>;
+        print('Number of last messages: ${lastMessages.docs.length}');
 
-            // Get the other user's ID
-            final otherUserId = members.firstWhere((id) => id != senderId);
+        for (final doc in lastMessages.docs) {
+          final recipientId = doc.id;
 
-            // Fetch the last message in the chat
-            final lastMessageSnapshot = await _firestore
-                .collection('chats/$chatId/messages')
-                .orderBy('timestamp', descending: true)
-                .limit(1)
-                .get();
+          // Fetch the last message and its timestamp
+          final lastMessageData = await fetchLastMessageData(senderId, recipientId);
 
-            if (lastMessageSnapshot.docs.isNotEmpty) {
-              final lastMessageData =
-              lastMessageSnapshot.docs.first.data() as Map<String, dynamic>;
-              final lastMessage = ChatMessage.fromMap(lastMessageData);
-
-              // Fetch the other user's details
-              final otherUserSnapshot =
-              await _firestore.collection('users').doc(otherUserId).get();
-
-              if (otherUserSnapshot.exists) {
-                final otherUserData =
-                otherUserSnapshot.data() as Map<String, dynamic>;
-                final otherUserName = otherUserData['username'] as String;
-
-                // Update last message with user details
-                lastMessage.senderId = otherUserId;
-                lastMessage.senderName = otherUserName;
-
-                newLastMessages.add(lastMessage);
-              }
-            }
+          if (lastMessageData != null) {
+            userData.add(UserData1(
+              userUuid: recipientId,
+              username: lastMessageData['username'],
+              profilepicture: lastMessageData['profilepicture'],
+              email: lastMessageData['email'],
+              phonenumber: lastMessageData['phonenumber'],
+              lastMessageContent: lastMessageData['lastMessageContent'],
+              lastMessageTimestamp: lastMessageData['lastMessageTimestamp'],
+            ));
           }
-
-          lastMessages.value = newLastMessages;
-        } catch (e) {
-          print('Error listening for last messages: $e');
         }
-      });
+
+        print('Number of user data items: ${userData.length}');
+
+        update(); // Trigger UI update
+      }
+    } catch (e) {
+      print('Failed to fetch last messages: $e');
     }
   }
 
+  Future<Map<String, dynamic>?> fetchLastMessageData(String senderId, String recipientId) async {
+    try {
+      final chatId = getChatId(senderId, recipientId);
+      final chatCollectionPath = 'chats/$chatId/messages';
 
-  @override
-  void onClose() {
-    super.onClose();
-    messageEditingController.dispose();
+      final lastMessageSnapshot = await _firestore
+          .collection(chatCollectionPath)
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+
+      if (lastMessageSnapshot.docs.isNotEmpty) {
+        final lastMessageData = lastMessageSnapshot.docs.first.data() as Map<String, dynamic>;
+        final timestamp = lastMessageData['timestamp']?.toDate();
+        final lastMessageContent = lastMessageData['messageContent'] ?? '';
+
+        return {
+          'username': lastMessageData['senderName'],
+          'profilepicture': '',  // Update this with your logic to get the profile picture
+          'email': '',  // Update this with your logic to get the email
+          'phonenumber': '',  // Update this with your logic to get the phone number
+          'lastMessageContent': lastMessageContent,
+          'lastMessageTimestamp': timestamp,
+        };
+      }
+
+      return null;
+    } catch (e) {
+      print('Failed to fetch last message data: $e');
+      return null;
+    }
   }
 }
+
+
+
+
