@@ -1,10 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
-import 'package:flutter/foundation.dart' as foundation;
 import '../../../models/chatmessage.dart';
 import '../Messagepage/messagepage_controller.dart';
 
@@ -22,13 +25,15 @@ class ChatController extends GetxController {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
+  // Define onNewMessage callback property
+  void Function()? onNewMessage;
+
   @override
   void onInit() {
     super.onInit();
 
-    final String? recipientId = 'someRecipientId';
+    final String? recipientId = Get.arguments['uuid']; // Use the recipient ID from the route arguments
     listenForMessages(recipientId ?? '');
-
     initializeLocalNotifications();
   }
 
@@ -43,30 +48,22 @@ class ChatController extends GetxController {
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
     );
-
-    // Set up the notification tap handling
-    // flutterLocalNotificationsPlugin.initialize(
-    //   initializationSettings,
-    //   onSelectNotification: (String? payload) async {
-    //     // Handle notification tap
-    //     print('Notification tapped with payload: $payload');
-    //   },
-    // );
   }
 
-
-
   Future<void> onSelectNotification(String? payload) async {
-    // Handle notification tap
     print('Notification tapped with payload: $payload');
   }
 
-  void showNotification(String title, String body) async {
+  void showNotification(String title, String lastMessageContent) async {
+    final user = _auth.currentUser;
+    final senderName = user?.displayName ?? 'You';
+
+    String notificationBody = 'New Message from $senderName: $lastMessageContent';
+
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
     AndroidNotificationDetails(
       'your_channel_id', // Change this to your channel ID
       'Your Channel Name', // Change this to your channel name
-     // 'Your Channel Description', // Change this to your channel description
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -77,10 +74,43 @@ class ChatController extends GetxController {
     await flutterLocalNotificationsPlugin.show(
       0,
       title,
-      body,
+      notificationBody,
       platformChannelSpecifics,
       payload: 'New Message', // You can add additional data to handle tap
     );
+  }
+
+
+  Future<void> pickImage(String recipientId) async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      String? imageUrl = await uploadImage(File(image.path) as String);
+      sendMessage(recipientId, 'Image', imageUrl);
+    }
+  }
+  Future<String?> uploadImage(String filePath) async {
+    try {
+      final user = _auth.currentUser;
+      final senderId = user?.uid;
+
+      if (senderId != null) {
+        final storageReference = firebase_storage.FirebaseStorage.instance
+            .ref()
+            .child('chat_images')
+            .child('$senderId-${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+        final storageUploadTask = storageReference.putFile(File(filePath));
+        final storageTaskSnapshot = await storageUploadTask;
+
+        final imageUrl = await storageTaskSnapshot.ref.getDownloadURL();
+        return imageUrl;
+      }
+    } catch (e) {
+      print('Failed to upload image: $e');
+      return null;
+    }
   }
 
   void listenForMessages(String recipientId) {
@@ -88,9 +118,7 @@ class ChatController extends GetxController {
     final senderId = user?.uid;
 
     if (senderId != null) {
-      // Create a unique chat ID based on user IDs
       String chatId = getChatId(senderId, recipientId);
-
       String chatCollectionPath = 'chats/$chatId/messages';
 
       _firestore
@@ -110,18 +138,23 @@ class ChatController extends GetxController {
           messages.value = newMessages;
 
           String? lastMessage =
-          newMessages.isNotEmpty ? newMessages.last.messageContent : null;
+          newMessages.isNotEmpty ? newMessages.first.messageContent : null;
           lastReceivedMessage.value = lastMessage ?? '';
 
-          // Show notification when a new message is received
           if (newMessages.isNotEmpty) {
             showNotification(
               'New Message from ${user?.displayName ?? ''}',
-              newMessages.last.messageContent,
+              newMessages.first.messageContent,
             );
           }
 
-          updateMessagePage();
+          // Notify about new messages
+          if (onNewMessage != null) {
+            onNewMessage!();
+          }
+
+          // Update the UI of the current chat page
+          update();
         } catch (e) {
           print('Error listening for messages: $e');
         }
@@ -129,26 +162,24 @@ class ChatController extends GetxController {
     }
   }
 
-  Future<String?> sendMessage(String recipientId, String messageContent) async {
+  Future<String?> sendMessage(String recipientId, String messageContent, String? imageUrl) async {
     try {
       final user = _auth.currentUser;
       final senderId = user?.uid;
       final senderName = user?.displayName ?? 'You';
 
       if (senderId != null) {
-        // Create a unique chat ID based on user IDs
         String chatId = getChatId(senderId, recipientId);
-
         String chatCollectionPath = 'chats/$chatId/messages';
 
-        DocumentReference documentReference =
-        await _firestore.collection(chatCollectionPath).add({
+        DocumentReference documentReference = await _firestore.collection(chatCollectionPath).add({
           'senderId': senderId,
           'recipientId': recipientId,
           'messageContent': messageContent,
           'timestamp': FieldValue.serverTimestamp(),
           'senderName': senderName,
-          'last-message': messageContent,
+          'last-message': imageUrl != null ? 'Image' : messageContent,
+          'imageUrl': imageUrl, // Add imageUrl to the document if it's an image message
         });
 
         String documentId = documentReference.id;
@@ -156,8 +187,7 @@ class ChatController extends GetxController {
         lastSentMessage.value = messageContent;
         messageEditingController.clear();
 
-        // Fetch updated messages and trigger MessagePage update
-        listenForMessages(recipientId);
+        listenForMessages(recipientId, /* provide user data here if needed */);
         updateMessagePage();
 
         return documentId;
@@ -168,15 +198,13 @@ class ChatController extends GetxController {
     }
   }
 
-// Helper function to get a unique chat ID based on user IDs
   String getChatId(String userId1, String userId2) {
     List<String> sortedIds = [userId1, userId2]..sort();
     return sortedIds.join('_');
   }
 
-  // Helper function to trigger MessagePage update
   void updateMessagePage() {
-    Get.find<MessageController>().update();
+    Get.find<MessageController>().fetchCurrentUserLastMessages();
   }
 
   @override

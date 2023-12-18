@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import 'package:flutter/foundation.dart' as foundation;
@@ -14,11 +15,9 @@ import 'chatpage_controller.dart';
 
 class ChatPage extends GetView<ChatController> {
   final TextEditingController _messageController = TextEditingController();
-  final ChatController controller = Get.put(ChatController());
   bool _todaySeparatorShown = false;
   bool _yesterdaySeparatorShown = false;
-
-
+  final ChatController controller = Get.put(ChatController());
 
   @override
   Widget build(BuildContext context) {
@@ -90,14 +89,13 @@ class ChatPage extends GetView<ChatController> {
         children: <Widget>[
           Expanded(
             child: Obx(() => ListView.builder(
-              reverse: true,
+              reverse: false,
               itemCount: controller.messages.length,
               itemBuilder: (context, index) {
                 final reversedIndex = controller.messages.length - 1 - index;
                 final message = controller.messages[reversedIndex];
                 final isUserMessage = message.senderId == senderId;
 
-                // Show the date separator for today only once
                 if (isTodayMessage(message) && !_todaySeparatorShown) {
                   _todaySeparatorShown = true;
                   return Column(
@@ -116,13 +114,11 @@ class ChatPage extends GetView<ChatController> {
                           ),
                         ),
                       ),
-                      // Message widget
                       buildMessageWidget(message, isUserMessage),
                     ],
                   );
                 } else if (isYesterdayMessage(message) &&
                     !_yesterdaySeparatorShown) {
-                  // Show the date separator for yesterday only once
                   _yesterdaySeparatorShown = true;
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,12 +136,10 @@ class ChatPage extends GetView<ChatController> {
                           ),
                         ),
                       ),
-                      // Message widget
                       buildMessageWidget(message, isUserMessage),
                     ],
                   );
                 } else {
-                  // Only show the message widget for other dates
                   return buildMessageWidget(message, isUserMessage);
                 }
               },
@@ -157,104 +151,28 @@ class ChatPage extends GetView<ChatController> {
               padding: const EdgeInsets.all(10.0),
               child: Row(
                 children: [
-
-                  IconButton(
-                    icon: Icon(Icons.emoji_emotions),
-                    onPressed: () {
-                      // Open EmojiPicker when the emoji button is pressed
-                      Get.bottomSheet(
-                        Container(
-                          height: 300, // Set a fixed height for the bottom sheet
-                          child: EmojiPicker(
-                              onEmojiSelected: (Category? category, Emoji? emoji) {
-                                if (category != null && emoji != null) {
-                                  _messageController.text = _messageController.text + emoji.emoji;
-                                }
-                              },
-                              config: Config(
-                                columns: 7,
-                                emojiSizeMax: 32 *
-                                    (foundation.defaultTargetPlatform ==
-                                        TargetPlatform.iOS
-                                        ? 1.30
-                                        : 1.0),
-                                verticalSpacing: 0,
-                                horizontalSpacing: 0,
-                                gridPadding: EdgeInsets.zero,
-                                initCategory: Category.RECENT,
-                                bgColor: const Color(0xFFF2F2F2),
-                                indicatorColor: Colors.blue,
-                                iconColor: Colors.grey,
-                                iconColorSelected: Colors.blue,
-                                backspaceColor: Colors.blue,
-                                skinToneDialogBgColor: Colors.white,
-                                skinToneIndicatorColor: Colors.grey,
-                                enableSkinTones: true,
-                                recentTabBehavior: RecentTabBehavior.RECENT,
-                                recentsLimit: 28,
-                                replaceEmojiOnLimitExceed: false,
-                                noRecents: const Text(
-                                  'No Recents',
-                                  style: TextStyle(fontSize: 20, color: Colors.black26),
-                                  textAlign: TextAlign.center,
-                                ),
-                                loadingIndicator: const SizedBox.shrink(),
-                                tabIndicatorAnimDuration: kTabScrollDuration,
-                                categoryIcons: const CategoryIcons(),
-                                buttonMode: ButtonMode.MATERIAL,
-                                checkPlatformCompatibility: true,
-                              )
-
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-
-
-
-
                   Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(20.0),
-                        border: Border.all(width: 0.0, color: Colors.grey),
-                      ),
-                      child: TextFormField(
-                        controller: _messageController,
-                        decoration: InputDecoration(
-                          hintText: 'Write your message',
-                          hintStyle: textWelcomeBack,
-                          contentPadding: EdgeInsets.only(
-                            left: 15.0,
-                            right: 15,
-                            top: 5.0,
-                            bottom: 5.0,
-                          ),
-                          border: InputBorder.none,
-                        ),
-                        onFieldSubmitted: (message) {
-                          controller.sendMessage(userData?['uuid'], message);
-                        },
-                        onChanged: (message) {
-
-                        },
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: 'Type your message...',
                       ),
                     ),
                   ),
                   IconButton(
                     icon: Icon(Icons.camera_alt),
                     onPressed: () {
-                      // Handle camera icon press
+                      controller.pickImage(userData?['uuid']);
                     },
                   ),
                   IconButton(
                     icon: Icon(Icons.send),
                     onPressed: () {
                       controller.sendMessage(
-                          userData?['uuid'], _messageController.text);
+                        userData?['uuid'],
+                        _messageController.text,
+                        null,
+                      );
                       final user = FirebaseAuth.instance.currentUser;
                       final sentMessage = ChatMessage(
                         senderId: senderId ?? '',
@@ -272,15 +190,12 @@ class ChatPage extends GetView<ChatController> {
               ),
             ),
           ),
-          // EmojiPicker widget
-
         ],
       ),
     );
   }
 
   Widget buildMessageWidget(ChatMessage message, bool isUserMessage) {
-    // Format the timestamp to display only the time
     String formattedTime = DateFormat.Hm().format(message.timestamp.toDate());
 
     return Align(
@@ -296,12 +211,19 @@ class ChatPage extends GetView<ChatController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                message.messageContent,
-                style: TextStyle(
-                  color: isUserMessage ? Colors.white : Colors.black,
+              if (message.imageUrl != null)
+                Image.network(
+                  message.imageUrl!,
+                  width: 200,
+                  height: 200,
+                )
+              else
+                Text(
+                  message.messageContent,
+                  style: TextStyle(
+                    color: isUserMessage ? Colors.white : Colors.black,
+                  ),
                 ),
-              ),
               SizedBox(height: 5),
               Text(
                 '${message.senderName} • $formattedTime',

@@ -1,7 +1,8 @@
+// MessageController.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
-
 
 import '../../../models/contectpagemodel.dart';
 
@@ -17,10 +18,6 @@ class MessageController extends GetxController {
     fetchCurrentUserLastMessages();
   }
 
-  String getChatId(String userId1, String userId2) {
-    List<String> sortedIds = [userId1, userId2]..sort();
-    return sortedIds.join('_');
-  }
   Future<void> fetchCurrentUserLastMessages() async {
     try {
       final user = _auth.currentUser;
@@ -30,8 +27,6 @@ class MessageController extends GetxController {
         userData.clear();
 
         final lastMessages = await _firestore.collection('users/$senderId/chatwith').get();
-
-        print('Number of last messages: ${lastMessages.docs.length}');
 
         for (final doc in lastMessages.docs) {
           final recipientId = doc.id;
@@ -51,8 +46,6 @@ class MessageController extends GetxController {
             ));
           }
         }
-
-        print('Number of user data items: ${userData.length}');
 
         update(); // Trigger UI update
       }
@@ -79,9 +72,9 @@ class MessageController extends GetxController {
 
         return {
           'username': lastMessageData['senderName'],
-          'profilepicture': '',  // Update this with your logic to get the profile picture
-          'email': '',  // Update this with your logic to get the email
-          'phonenumber': '',  // Update this with your logic to get the phone number
+          'profilepicture': '',  // Replace with your logic to get the profile picture
+          'email': '',  // Replace with your logic to get the email
+          'phonenumber': '',  // Replace with your logic to get the phone number
           'lastMessageContent': lastMessageContent,
           'lastMessageTimestamp': timestamp,
         };
@@ -94,8 +87,8 @@ class MessageController extends GetxController {
     }
   }
 
+  String getChatId(String userId1, String userId2) {
+    List<String> sortedIds = [userId1, userId2]..sort();
+    return sortedIds.join('_');
+  }
 }
-
-
-
-

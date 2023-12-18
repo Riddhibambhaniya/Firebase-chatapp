@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../models/contectpagemodel.dart';
-
+import '../../../models/chatmessage.dart'; // Assuming you have a ChatMessage model
 
 class ContactController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;

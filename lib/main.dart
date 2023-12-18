@@ -15,6 +15,8 @@ void main() async {
     appId: 'com.example.project_structure_with_getx',
     messagingSenderId: '875664124972',
     projectId: 'messaging-chatbox',
+        storageBucket: 'gs://messaging-chatbox.appspot.com',
+
   ));
   Get.put<AuthController>(AuthController());
   runApp(const MyApp());
