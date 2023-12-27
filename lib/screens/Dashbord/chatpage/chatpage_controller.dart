@@ -31,13 +31,14 @@ class ChatController extends GetxController {
   void Function()? onNewMessage;
 
   @override
-  @override
   void onInit() {
     super.onInit();
 
-    final String? recipientId =
-    Get.arguments['uuid']; // Use the recipient ID from the route arguments
-    chatId = Get.arguments['chatId'] ?? "";
+    final String? recipientId = Get.arguments['uuid'];
+    chatId = Get.arguments['chatId'] ?? generateChatId(
+      FirebaseAuth.instance.currentUser?.uid ?? '',
+      recipientId ?? '',
+    );
     print("chatId $chatId");
     listenForMessages(recipientId ?? '');
     initializeLocalNotifications();
@@ -133,10 +134,7 @@ class ChatController extends GetxController {
     final senderId = user?.uid;
 
     if (senderId != null) {
-      // Generate a unique chat ID based on sender and recipient IDs
-      String uniqueChatId = generateChatId(senderId, recipientId);
-
-      String chatCollectionPath = 'chats/$uniqueChatId/messages';
+      String chatCollectionPath = 'chats/$chatId/messages';
 
       _firestore
           .collection(chatCollectionPath)
@@ -196,17 +194,14 @@ class ChatController extends GetxController {
       final senderName = senderObj['name'];
 
       if (senderId != null) {
-        // Generate a unique chat ID based on sender and recipient IDs
-        String uniqueChatId = generateChatId(senderId, recipientId);
-
-        String chatCollectionPath = 'chats/$uniqueChatId/messages';
+        String chatCollectionPath = 'chats/$chatId/messages';
 
         // Check if the chat already exists
         final existingChat = await _firestore.collection(chatCollectionPath).get();
 
         if (existingChat.docs.isEmpty) {
           // Chat doesn't exist, create a new one
-          await FirebaseFirestore.instance.collection('chats').doc(uniqueChatId).set({
+          await FirebaseFirestore.instance.collection('chats').doc(chatId).set({
             'members': [senderId, recipientId],
             'created_at': FieldValue.serverTimestamp(),
           });
@@ -238,7 +233,7 @@ class ChatController extends GetxController {
             .collection('users')
             .doc(senderId)
             .collection("chat_with")
-            .doc(uniqueChatId)
+            .doc(chatId)
             .set({
           'senderId': senderId,
           'recipientId': recipientId,
@@ -250,7 +245,7 @@ class ChatController extends GetxController {
             .collection('users')
             .doc(recipientId)
             .collection("chat_with")
-            .doc(uniqueChatId)
+            .doc(chatId)
             .set({
           'senderId': senderId,
           'recipientId': recipientId,
@@ -264,7 +259,7 @@ class ChatController extends GetxController {
         messageEditingController.clear();
 
         listenForMessages(
-          recipientId, /* provide user data here if needed */
+          recipientId,
         );
         updateMessagePage();
 

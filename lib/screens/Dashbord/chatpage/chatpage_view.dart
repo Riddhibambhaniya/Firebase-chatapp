@@ -119,26 +119,26 @@ class ChatPage extends GetView<ChatController> {
                     !_yesterdaySeparatorShown) {
                   _yesterdaySeparatorShown = true;
                   return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                  Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Center(
-                child: Text(
-                'Yesterday',
-                style: TextStyle(
-                color: Colors.grey,
-                fontWeight: FontWeight.bold,
-                fontSize: 17,
-                ),
-                ),
-                ),
-                ),
-                buildMessageWidget(message, senderId)]
-
-                );
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Center(
+                          child: Text(
+                            'Yesterday',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17,
+                            ),
+                          ),
+                        ),
+                      ),
+                      buildMessageWidget(message, senderId),
+                    ],
+                  );
                 } else {
-                return buildMessageWidget(message, senderId);
+                  return buildMessageWidget(message, senderId);
                 }
               },
             )),
@@ -243,7 +243,4 @@ class ChatPage extends GetView<ChatController> {
       ),
     );
   }
-
-
-
 }
