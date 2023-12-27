@@ -231,8 +231,9 @@ class ChatPage extends GetView<ChatController> {
               Text(
                 '${message.senderName} • $formattedTime',
                 style: TextStyle(
-                  color:
-                  message.senderId == senderId ? Colors.white70 : Colors.black54,
+                  color: message.senderId == senderId
+                      ? Colors.white70
+                      : Colors.black54,
                   fontSize: 12,
                 ),
               ),
@@ -242,5 +243,7 @@ class ChatPage extends GetView<ChatController> {
       ),
     );
   }
+
+
 
 }
