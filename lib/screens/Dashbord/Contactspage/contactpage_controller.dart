@@ -21,20 +21,29 @@ class ContactController extends GetxController {
 
   Future<void> fetchUserList() async {
     try {
-      if (FirebaseAuth.instance.currentUser != null) {
-        final users =
-        await FirebaseFirestore.instance.collection('users').get();
-        print('Number of user documents: ${users.docs.length}');
-        users.docs.forEach((element) {
-          userList.add(UserData1(
-              username: element.get("name"),
-              profilepicture: element.get("profilepicture"),
-              userUuid: element.get("uuid"),
-              email: element.get("email"),
-              phonenumber: element.get("phonenumber"),
+      final currentUser = FirebaseAuth.instance.currentUser;
 
-          )
-          );
+      if (currentUser != null) {
+        // Fetch the user list from Firestore
+        final users = await FirebaseFirestore.instance.collection('users').get();
+        print('Number of user documents: ${users.docs.length}');
+
+        // Add all users to the contact list
+        users.docs.forEach((element) {
+          // Use default values if fields are not present
+          String name = element.get("name") ?? 'Default Name';
+          String profilePicture = element.get("profilepicture") ?? 'default_profile_picture_url';
+          String uuid = element.get("uuid") ?? '';
+          String email = element.get("email") ?? '';
+          int phoneNumber = element.get("phonenumber") ?? 'default_phone_number';
+
+          userList.add(UserData1(
+            username: name,
+            profilepicture: profilePicture,
+            userUuid: uuid,
+            email: email,
+            phonenumber: phoneNumber,
+          ));
         });
 
         update(); // Trigger UI update
@@ -43,6 +52,13 @@ class ContactController extends GetxController {
       print('Failed to fetch user list: $e');
     }
   }
+
+
+
+
+
+
+
 
   void search(String query) {
     searchResults.clear();
@@ -58,7 +74,6 @@ class ContactController extends GetxController {
     userList.clear();
     update(); // Trigger UI update
   }
-
   Future<void> startChat(UserData1 otherUser) async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
@@ -66,33 +81,43 @@ class ContactController extends GetxController {
         // Create a new chat session or get an existing one
         final chatId = await _getOrCreateChat(currentUser.uid, otherUser.userUuid);
 
+        print("chatId $chatId");
         // Navigate to the chat page with the chat ID
-        Get.toNamed('/chat', arguments: {'chatId': chatId});
+        Get.toNamed('/chat', arguments: {
+          'chatId': chatId,
+          'name': otherUser.username,
+          'uuid': otherUser.userUuid
+        });
       }
     } catch (e) {
       print('Failed to start chat: $e');
     }
   }
 
+  String getConversationID(String userID, String peerID) {
+    return userID.hashCode <= peerID.hashCode
+        ? '${userID}_$peerID'
+        : '${peerID}_$userID';
+  }
+
+
   Future<String> _getOrCreateChat(String userId, String otherUserId) async {
-    // Sort user IDs to create a consistent chat ID
-    final sortedIds = [userId, otherUserId]..sort();
-    final chatId = sortedIds.join('_');
+    final chatId = getConversationID(userId, otherUserId);
 
-    // Check if the chat session already exists
-    final chatSnapshot =
-    await FirebaseFirestore.instance.collection('chats').doc(chatId).get();
-
-    if (chatSnapshot.exists) {
-      return chatId; // Return existing chat ID
-    } else {
-      // Create a new chat session
-      await FirebaseFirestore.instance.collection('chats').doc(chatId).set({
-        'members': [userId, otherUserId],
-        'created_at': FieldValue.serverTimestamp(),
-      });
-
-      return chatId; // Return the newly created chat ID
-    }
+    // // Check if the chat session already exists
+    // final chatSnapshot =
+    // await FirebaseFirestore.instance.collection('chats').doc(chatId).get();
+    return chatId; // Return the newly created chat ID
+    // if (chatSnapshot.exists) {
+    //   return chatId; // Return existing chat ID
+    // } else {
+    //   // Create a new chat session
+    //   await FirebaseFirestore.instance.collection('chats').doc(chatId).set({
+    //     'members': [userId, otherUserId],
+    //     'created_at': FieldValue.serverTimestamp(),
+    //   });
+    //
+    //   return chatId; // Return the newly created chat ID
+    // }
   }
 }

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import 'package:flutter/foundation.dart' as foundation;
@@ -114,33 +112,33 @@ class ChatPage extends GetView<ChatController> {
                           ),
                         ),
                       ),
-                      buildMessageWidget(message, isUserMessage),
+                      buildMessageWidget(message, senderId),
                     ],
                   );
                 } else if (isYesterdayMessage(message) &&
                     !_yesterdaySeparatorShown) {
                   _yesterdaySeparatorShown = true;
                   return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Center(
-                          child: Text(
-                            'Yesterday',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 17,
-                            ),
-                          ),
-                        ),
-                      ),
-                      buildMessageWidget(message, isUserMessage),
-                    ],
-                  );
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                  Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Center(
+                child: Text(
+                'Yesterday',
+                style: TextStyle(
+                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                ),
+                ),
+                ),
+                ),
+                buildMessageWidget(message, senderId)]
+
+                );
                 } else {
-                  return buildMessageWidget(message, isUserMessage);
+                return buildMessageWidget(message, senderId);
                 }
               },
             )),
@@ -195,17 +193,21 @@ class ChatPage extends GetView<ChatController> {
     );
   }
 
-  Widget buildMessageWidget(ChatMessage message, bool isUserMessage) {
+  Widget buildMessageWidget(ChatMessage message, String? senderId) {
     String formattedTime = DateFormat.Hm().format(message.timestamp.toDate());
 
     return Align(
-      alignment: isUserMessage ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: message.senderId == senderId
+          ? Alignment.centerRight
+          : Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 15),
         child: Container(
           padding: EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: isUserMessage ? Color(0xFF20A090) : Color(0xFFF2F7FB),
+            color: message.senderId == senderId
+                ? Color(0xFF20A090)
+                : Color(0xFFF2F7FB),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
@@ -221,14 +223,16 @@ class ChatPage extends GetView<ChatController> {
                 Text(
                   message.messageContent,
                   style: TextStyle(
-                    color: isUserMessage ? Colors.white : Colors.black,
+                    color:
+                    message.senderId == senderId ? Colors.white : Colors.black,
                   ),
                 ),
               SizedBox(height: 5),
               Text(
                 '${message.senderName} • $formattedTime',
                 style: TextStyle(
-                  color: isUserMessage ? Colors.white70 : Colors.black54,
+                  color:
+                  message.senderId == senderId ? Colors.white70 : Colors.black54,
                   fontSize: 12,
                 ),
               ),
@@ -238,4 +242,5 @@ class ChatPage extends GetView<ChatController> {
       ),
     );
   }
+
 }

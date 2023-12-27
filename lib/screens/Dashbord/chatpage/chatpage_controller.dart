@@ -23,25 +23,33 @@ class ChatController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
+
+  String chatId = "";
 
   // Define onNewMessage callback property
   void Function()? onNewMessage;
 
   @override
+  @override
   void onInit() {
     super.onInit();
 
-    final String? recipientId = Get.arguments['uuid']; // Use the recipient ID from the route arguments
+    final String? recipientId =
+    Get.arguments['uuid']; // Use the recipient ID from the route arguments
+    chatId = Get.arguments['chatId'] ?? "";
+    print("chatId $chatId");
     listenForMessages(recipientId ?? '');
     initializeLocalNotifications();
   }
 
+
   void initializeLocalNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    final InitializationSettings initializationSettings = InitializationSettings(
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
       android: initializationSettingsAndroid,
     );
 
@@ -58,10 +66,11 @@ class ChatController extends GetxController {
     final user = _auth.currentUser;
     final senderName = user?.displayName ?? 'You';
 
-    String notificationBody = 'New Message from $senderName: $lastMessageContent';
+    String notificationBody =
+        'New Message from $senderName: $lastMessageContent';
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails(
+        AndroidNotificationDetails(
       'your_channel_id', // Change this to your channel ID
       'Your Channel Name', // Change this to your channel name
       importance: Importance.max,
@@ -69,7 +78,7 @@ class ChatController extends GetxController {
     );
 
     const NotificationDetails platformChannelSpecifics =
-    NotificationDetails(android: androidPlatformChannelSpecifics);
+        NotificationDetails(android: androidPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.show(
       0,
@@ -80,7 +89,6 @@ class ChatController extends GetxController {
     );
   }
 
-
   Future<void> pickImage(String recipientId) async {
     final ImagePicker _picker = ImagePicker();
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -90,6 +98,7 @@ class ChatController extends GetxController {
       sendMessage(recipientId, 'Image', imageUrl);
     }
   }
+
   Future<String?> uploadImage(String filePath) async {
     try {
       final user = _auth.currentUser;
@@ -118,12 +127,11 @@ class ChatController extends GetxController {
     final senderId = user?.uid;
 
     if (senderId != null) {
-      String chatId = getChatId(senderId, recipientId);
       String chatCollectionPath = 'chats/$chatId/messages';
 
       _firestore
           .collection(chatCollectionPath)
-          .orderBy('timestamp', descending: true)
+          .orderBy('timestamp', descending: true)  // Order messages by timestamp
           .snapshots()
           .listen((querySnapshot) {
         try {
@@ -134,6 +142,9 @@ class ChatController extends GetxController {
             final message = ChatMessage.fromMap(data);
             newMessages.add(message);
           }
+
+          // Sort messages by timestamp in descending order
+          newMessages.sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
           messages.value = newMessages;
 
@@ -162,24 +173,74 @@ class ChatController extends GetxController {
     }
   }
 
-  Future<String?> sendMessage(String recipientId, String messageContent, String? imageUrl) async {
+
+  Future<String?> sendMessage(
+      String recipientId, String messageContent, String? imageUrl) async {
     try {
       final user = _auth.currentUser;
       final senderId = user?.uid;
-      final senderName = user?.displayName ?? 'You';
+      final senderObj = await FirebaseFirestore.instance.collection('users').doc(senderId).get();
+      final senderName = senderObj['name'];
 
       if (senderId != null) {
-        String chatId = getChatId(senderId, recipientId);
+
         String chatCollectionPath = 'chats/$chatId/messages';
 
-        DocumentReference documentReference = await _firestore.collection(chatCollectionPath).add({
+        // Check if the chat already exists
+        final existingChat = await _firestore.collection(chatCollectionPath).get();
+
+        if (existingChat.docs.isEmpty) {
+          // Chat doesn't exist, create a new one
+          await FirebaseFirestore.instance.collection('chats').doc(chatId).set({
+            'members': [senderId, recipientId],
+            'created_at': FieldValue.serverTimestamp(),
+          });
+        }
+
+        DocumentReference documentReference =
+        await _firestore.collection(chatCollectionPath).add({
           'senderId': senderId,
           'recipientId': recipientId,
           'messageContent': messageContent,
           'timestamp': FieldValue.serverTimestamp(),
           'senderName': senderName,
           'last-message': imageUrl != null ? 'Image' : messageContent,
-          'imageUrl': imageUrl, // Add imageUrl to the document if it's an image message
+          'imageUrl': imageUrl,
+        });
+
+        // Add the same message to the recipient's chat
+        await _firestore.collection(chatCollectionPath).add({
+          'senderId': senderId,
+          'recipientId': recipientId,
+          'messageContent': messageContent,
+          'timestamp': FieldValue.serverTimestamp(),
+          'senderName': senderName,
+          'last-message': imageUrl != null ? 'Image' : messageContent,
+          'imageUrl': imageUrl,
+        });
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(senderId)
+            .collection("chat_with")
+            .doc(chatId)
+            .set({
+          'senderId': senderId,
+          'recipientId': recipientId,
+          'senderName': senderName,
+          'messageContent': messageContent,
+        });
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(recipientId)
+            .collection("chat_with")
+            .doc(chatId)
+            .set({
+          'senderId': senderId,
+          'recipientId': recipientId,
+          'senderName': senderName,
+          'messageContent': messageContent,
         });
 
         String documentId = documentReference.id;
@@ -187,7 +248,9 @@ class ChatController extends GetxController {
         lastSentMessage.value = messageContent;
         messageEditingController.clear();
 
-        listenForMessages(recipientId, /* provide user data here if needed */);
+        listenForMessages(
+          recipientId, /* provide user data here if needed */
+        );
         updateMessagePage();
 
         return documentId;
@@ -198,10 +261,7 @@ class ChatController extends GetxController {
     }
   }
 
-  String getChatId(String userId1, String userId2) {
-    List<String> sortedIds = [userId1, userId2]..sort();
-    return sortedIds.join('_');
-  }
+
 
   void updateMessagePage() {
     Get.find<MessageController>().fetchCurrentUserLastMessages();
