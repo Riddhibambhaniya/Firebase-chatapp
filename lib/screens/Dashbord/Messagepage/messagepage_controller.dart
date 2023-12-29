@@ -36,11 +36,11 @@ class MessageController extends GetxController {
 
           if (lastMessageData != null) {
             userData.add(UserData1(
-              userUuid: recipientId,
-              username: lastMessageData['username'],
-              profilepicture: lastMessageData['profilepicture'],
+              uuid: recipientId,
+              name: lastMessageData['username'],
+              // profilepicture: lastMessageData['profilepicture'],
               email: lastMessageData['email'],
-              phonenumber: lastMessageData['phonenumber'],
+              // phoneNumber: lastMessageData['phonenumber'],
               lastMessageContent: lastMessageData['lastMessageContent'],
               lastMessageTimestamp: lastMessageData['lastMessageTimestamp'],
             ));

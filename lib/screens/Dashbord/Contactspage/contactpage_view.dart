@@ -68,8 +68,8 @@ class ContactPage extends GetView<ContactController> {
                           itemBuilder: (context, index) {
                             final userData = controller.userList[index];
                             final showHeader = index == 0 ||
-                                userData.username[0] !=
-                                    controller.userList[index - 1].username[0];
+                                userData.name[0] !=
+                                    controller.userList[index - 1].name[0];
 
                             return Column(
                               mainAxisSize: MainAxisSize.min,
@@ -79,7 +79,7 @@ class ContactPage extends GetView<ContactController> {
                                     padding:
                                         const EdgeInsets.only(right: 310.0),
                                     child: Text(
-                                      userData.username[0],
+                                      userData.name[0],
                                       style: appbar2,
                                     ),
                                   ),
@@ -124,13 +124,13 @@ class UserRow1 extends StatelessWidget {
           final currentUser = FirebaseAuth.instance.currentUser;
 
           final chatId =
-              getConversationID(userData1.userUuid, currentUser?.uid ?? "");
+              getConversationID(userData1.uuid, currentUser?.uid ?? "");
 
           // Navigate to the ChatPage with user details
           Get.to(() => ChatPage(), arguments: {
-            'uuid': userData1.userUuid,
+            'uuid': userData1.uuid,
             // Assuming you have a userUuid property in UserData1
-            'name': userData1.username,
+            'name': userData1.name,
             'email': userData1.email,
             'chatId': chatId,
           });
@@ -148,34 +148,34 @@ class UserRow1 extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(
-                      left: 30.0, right: 10.0, bottom: 5.0),
-                  child: CircleAvatar(
-                    radius: 25.0, backgroundColor: Colors.black,
-                    backgroundImage: (userData1.profilepicture.isNotEmpty)
-                        ? AssetImage(userData1.profilepicture)
-                        : null, // Use null when there is no image
-                    child: (userData1.profilepicture.isEmpty)
-                        ? Text(
-                            userData1.username.isNotEmpty
-                                ? userData1.username[0].toUpperCase()
-                                : '', // Display the first letter of the username
-                            style: TextStyle(
-                              fontSize: 15.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        : null, // Display nothing when there is an image
-                  ),
-                ),
+                // Padding(
+                //   padding: const EdgeInsets.only(
+                //       left: 30.0, right: 10.0, bottom: 5.0),
+                //   child: CircleAvatar(
+                //     radius: 25.0, backgroundColor: Colors.black,
+                //     backgroundImage: (userData1.profilepicture.isNotEmpty)
+                //         ? AssetImage(userData1.profilepicture)
+                //         : null, // Use null when there is no image
+                //     child: (userData1.profilepicture.isEmpty)
+                //         ? Text(
+                //             userData1.username.isNotEmpty
+                //                 ? userData1.username[0].toUpperCase()
+                //                 : '', // Display the first letter of the username
+                //             style: TextStyle(
+                //               fontSize: 15.0,
+                //               fontWeight: FontWeight.bold,
+                //             ),
+                //           )
+                //         : null, // Display nothing when there is an image
+                //   ),
+                // ),
                 SizedBox(width: 10.0),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(userData1.username, style: appbar2),
+                      Text(userData1.name, style: appbar2),
                       Text(userData1.email, style: appbar1),
                     ],
                   ),

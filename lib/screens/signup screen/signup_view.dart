@@ -128,6 +128,20 @@ signing up for our chat app!''',
                   ),
                 ),
                 SizedBox(height: 100.0),
+                Container(
+                  width: 340,
+                  child: TextFormField(
+                    controller: controller.phoneNumberController,
+                    onChanged: (value) {
+                      controller.phoneNumber.value = value;
+                      controller.updateButtonColor();
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Phone Number',
+                    ),
+                  ),
+                ),
+                SizedBox(height: 100.0),
                 Obx(() => Container(
                   width: 340,
                   height: 50,

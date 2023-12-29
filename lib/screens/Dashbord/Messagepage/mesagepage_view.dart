@@ -107,8 +107,8 @@ class UserRow extends StatelessWidget {
       onTap: () {
         // Navigate to the ChatPage with user details
         Get.to(() => ChatPage(), arguments: {
-          'uuid': userData1.userUuid, // Assuming you have a userUuid property in UserData1
-          'name': userData1.username,
+          'uuid': userData1.uuid, // Assuming you have a userUuid property in UserData1
+          'name': userData1.name,
           'email': userData1.email,
         });
       },
@@ -121,34 +121,34 @@ class UserRow extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 30.0, right: 10.0, bottom: 5.0),
-                child: CircleAvatar(
-                  radius: 25.0,
-                  backgroundColor: Colors.black,
-                  backgroundImage: (userData1.profilepicture.isNotEmpty)
-                      ? AssetImage(userData1.profilepicture)
-                      : null,
-                  child: (userData1.profilepicture.isEmpty)
-                      ? Text(
-                    userData1.username.isNotEmpty
-                        ? userData1.username[0].toUpperCase()
-                        : '',
-                    style: TextStyle(
-                      fontSize: 15.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                      : null,
-                ),
-              ),
+              // Padding(
+              //   padding: const EdgeInsets.only(left: 30.0, right: 10.0, bottom: 5.0),
+              //   child: CircleAvatar(
+              //     radius: 25.0,
+              //     backgroundColor: Colors.black,
+              //     backgroundImage: (userData1.profilepicture.isNotEmpty)
+              //         ? AssetImage(userData1.profilepicture)
+              //         : null,
+              //     child: (userData1.profilepicture.isEmpty)
+              //         ? Text(
+              //       userData1.username.isNotEmpty
+              //           ? userData1.username[0].toUpperCase()
+              //           : '',
+              //       style: TextStyle(
+              //         fontSize: 15.0,
+              //         fontWeight: FontWeight.bold,
+              //       ),
+              //     )
+              //         : null,
+              //   ),
+              // ),
               SizedBox(width: 10.0),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(userData1.username, style: appbar2),
+                    Text(userData1.name, style: appbar2),
                     Text(
                       userData1.lastMessageContent ?? '', // Display last message content
                       style: appbar1,

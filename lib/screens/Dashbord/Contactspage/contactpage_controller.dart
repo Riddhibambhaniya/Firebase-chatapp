@@ -28,22 +28,25 @@ class ContactController extends GetxController {
         final users = await FirebaseFirestore.instance.collection('users').get();
         print('Number of user documents: ${users.docs.length}');
 
+        // Clear the existing list before updating
+        userList.clear();
+
         // Add all users to the contact list
         users.docs.forEach((element) {
-          // Use default values if fields are not present
-          String name = element.get("name") ?? 'Default Name';
-          String profilePicture = element.get("profilepicture") ?? 'default_profile_picture_url';
-          String uuid = element.get("uuid") ?? '';
-          String email = element.get("email") ?? '';
-          int phoneNumber = element.get("phonenumber") ?? 'default_phone_number';
+          // Check if the required fields exist in the document
+          if (element.exists) {
+            String name = element.get("name") ?? 'Default Name';
+            String uuid = element.get("uuid") ?? '';
+            String email = element.get("email") ?? '';
+            // int phoneNumber = element.get("phonenumber") ?? 0;
 
-          userList.add(UserData1(
-            username: name,
-            profilepicture: profilePicture,
-            userUuid: uuid,
-            email: email,
-            phonenumber: phoneNumber,
-          ));
+            userList.add(UserData1(
+              name: name,
+              uuid: uuid,
+              email: email,
+              // phoneNumber: phoneNumber,
+            ));
+          }
         });
 
         update(); // Trigger UI update
@@ -59,12 +62,11 @@ class ContactController extends GetxController {
 
 
 
-
   void search(String query) {
     searchResults.clear();
     if (query.isNotEmpty) {
       searchResults.addAll(userList.where(
-            (user) => user.username.toLowerCase().contains(query.toLowerCase()),
+            (user) => user.name.toLowerCase().contains(query.toLowerCase()),
       ));
     }
   }
@@ -79,14 +81,14 @@ class ContactController extends GetxController {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
         // Create a new chat session or get an existing one
-        final chatId = await _getOrCreateChat(currentUser.uid, otherUser.userUuid);
+        final chatId = await _getOrCreateChat(currentUser.uid, otherUser.uuid);
 
         print("chatId $chatId");
         // Navigate to the chat page with the chat ID
         Get.toNamed('/chat', arguments: {
           'chatId': chatId,
-          'name': otherUser.username,
-          'uuid': otherUser.userUuid
+          'name': otherUser.name,
+          'uuid': otherUser.uuid
         });
       }
     } catch (e) {
