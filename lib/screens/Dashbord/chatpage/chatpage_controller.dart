@@ -130,6 +130,7 @@ class ChatController extends GetxController {
   }
 
   void listenForMessages(String recipientId) {
+    print('Listening for messages with chatId: $chatId');
     final user = _auth.currentUser;
     final senderId = user?.uid;
 
@@ -159,6 +160,8 @@ class ChatController extends GetxController {
           newMessages.isNotEmpty ? newMessages.first.messageContent : null;
           lastReceivedMessage.value = lastMessage ?? '';
 
+          print('Receiver: $recipientId - New Messages: ${newMessages.length}');
+
           if (newMessages.isNotEmpty) {
             showNotification(
               'New Message from ${user?.displayName ?? ''}',
@@ -184,6 +187,7 @@ class ChatController extends GetxController {
     }
   }
 
+
   Future<String?> sendMessage(
       String recipientId, String messageContent, String? imageUrl) async {
     try {
@@ -207,7 +211,7 @@ class ChatController extends GetxController {
           });
         }
 
-        DocumentReference documentReference =
+        // Add the message to the chat
         await _firestore.collection(chatCollectionPath).add({
           'senderId': senderId,
           'recipientId': recipientId,
@@ -218,58 +222,50 @@ class ChatController extends GetxController {
           'imageUrl': imageUrl,
         });
 
-        // Add the same message to the recipient's chat
-        await _firestore.collection(chatCollectionPath).add({
-          'senderId': senderId,
-          'recipientId': recipientId,
-          'messageContent': messageContent,
-          'timestamp': FieldValue.serverTimestamp(),
-          'senderName': senderName,
-          'last-message': imageUrl != null ? 'Image' : messageContent,
-          'imageUrl': imageUrl,
-        });
-
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(senderId)
-            .collection("chat_with")
-            .doc(chatId)
-            .set({
-          'senderId': senderId,
-          'recipientId': recipientId,
-          'senderName': senderName,
-          'messageContent': messageContent,
-        });
-
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(recipientId)
-            .collection("chat_with")
-            .doc(chatId)
-            .set({
-          'senderId': senderId,
-          'recipientId': recipientId,
-          'senderName': senderName,
-          'messageContent': messageContent,
-        });
-
-        String documentId = documentReference.id;
+        // Update the user's chat history
+        await updateChatHistory(senderId, recipientId, messageContent, chatId);
+        await updateChatHistory(recipientId, senderId, messageContent, chatId);
 
         lastSentMessage.value = messageContent;
         messageEditingController.clear();
 
-        listenForMessages(
-          recipientId,
-        );
+        listenForMessages(recipientId);
         updateMessagePage();
 
-        return documentId;
+        return chatId;
       }
     } catch (e) {
       print('Failed to send message: $e');
       return null;
     }
   }
+
+  Future<void> updateChatHistory(
+      String userId,
+      String otherUserId,
+      String messageContent,
+      String chatId,
+      ) async {
+    try {
+      final userObj = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      final userName = userObj['name'];
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection("chat_with")
+          .doc(chatId)
+          .set({
+        'senderId': userId,
+        'recipientId': otherUserId,
+        'senderName': userName,
+        'messageContent': messageContent,
+      });
+    } catch (e) {
+      print('Failed to update chat history: $e');
+    }
+  }
+
 
   void updateMessagePage() {
     Get.find<MessageController>().fetchCurrentUserLastMessages();

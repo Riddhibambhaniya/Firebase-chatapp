@@ -224,7 +224,7 @@ class ChatPage extends GetView<ChatController> {
                   message.messageContent,
                   style: TextStyle(
                     color:
-                    message.senderId == senderId ? Colors.white : Colors.black,
+                    message.senderId == senderId ? Colors.orange : Colors.red,
                   ),
                 ),
               SizedBox(height: 5),

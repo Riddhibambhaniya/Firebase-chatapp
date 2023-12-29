@@ -125,7 +125,7 @@ class SignUpController extends GetxController {
         final userUID = user?.uid;
 
         // Generate a UUID for the user
-        final userUUID = Uuid().v4();
+        //  final userUUID = Uuid().v4();
 
         // Send email verification link
         await user?.sendEmailVerification();
@@ -138,7 +138,7 @@ class SignUpController extends GetxController {
           'name': name.value,
           'email': email.value,
           'phoneNumber': phoneNumber.value,
-          'uuid': userUUID,
+          'uuid': userUID,
         });
 
         // Now you have associated the UUID with the user in Firestore
