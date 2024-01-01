@@ -19,6 +19,9 @@ class ChatPage extends GetView<ChatController> {
 
   @override
   Widget build(BuildContext context) {
+    final arguments = Get.arguments as Map<String, dynamic>;
+    final List<ChatMessage> chatMessages = arguments['chatMessages'] ?? [];
+
     final Map<String, dynamic>? userData = Get.arguments;
     String? displayName = userData?['name'];
     final String? senderId = FirebaseAuth.instance.currentUser?.uid;

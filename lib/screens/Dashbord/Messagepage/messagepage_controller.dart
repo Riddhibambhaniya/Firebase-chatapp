@@ -15,34 +15,43 @@ class MessageController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchCurrentUserLastMessages();
+    fetchCurrentUserRecentChats();
   }
 
-  Future<void> fetchCurrentUserLastMessages() async {
+  Future<void> fetchCurrentUserRecentChats() async {
     try {
+      print('Fetching recent chats...');
       final user = _auth.currentUser;
       final senderId = user?.uid;
 
       if (senderId != null) {
-        userData.clear();
+        userData.clear(); // Clear existing data
 
-        final lastMessages = await _firestore.collection('users/$senderId/chatwith').get();
+        final recentChats = await _firestore
+            .collection('users/$senderId/chatwith')
+            .orderBy('timestamp', descending: true)
+            .get();
 
-        for (final doc in lastMessages.docs) {
+        for (final doc in recentChats.docs) {
           final recipientId = doc.id;
-
-          // Fetch the last message and its timestamp
-          final lastMessageData = await fetchLastMessageData(senderId, recipientId);
+          final lastMessageData =
+          await fetchLastMessageData(senderId, recipientId);
 
           if (lastMessageData != null) {
             userData.add(UserData1(
               uuid: recipientId,
-              name: lastMessageData['username'],
-              // profilepicture: lastMessageData['profilepicture'],
-              email: lastMessageData['email'],
-              // phoneNumber: lastMessageData['phonenumber'],
-              lastMessageContent: lastMessageData['lastMessageContent'],
-              lastMessageTimestamp: lastMessageData['lastMessageTimestamp'],
+              name: lastMessageData['senderName'],
+              email: "",
+              lastMessageContent: lastMessageData['messageContent'],
+              lastMessageTimestamp: lastMessageData['timestamp'],
+
+
+                // 'senderId': userId,
+                // 'recipientId': otherUserId,
+                // 'senderName': userName,
+                // 'messageContent': messageContent,
+                // 'timestamp': FieldValue.serverTimestamp(),
+
             ));
           }
         }
@@ -50,13 +59,14 @@ class MessageController extends GetxController {
         update(); // Trigger UI update
       }
     } catch (e) {
-      print('Failed to fetch last messages: $e');
+      print('Failed to fetch recent chats: $e');
     }
   }
 
-  Future<Map<String, dynamic>?> fetchLastMessageData(String senderId, String recipientId) async {
+  Future<Map<String, dynamic>?> fetchLastMessageData(
+      String senderId, String recipientId) async {
     try {
-      final chatId = getChatId(senderId, recipientId);
+      final chatId = getConversationID(senderId, recipientId);
       final chatCollectionPath = 'chats/$chatId/messages';
 
       final lastMessageSnapshot = await _firestore
@@ -66,15 +76,14 @@ class MessageController extends GetxController {
           .get();
 
       if (lastMessageSnapshot.docs.isNotEmpty) {
-        final lastMessageData = lastMessageSnapshot.docs.first.data() as Map<String, dynamic>;
+        final lastMessageData =
+        lastMessageSnapshot.docs.first.data() as Map<String, dynamic>;
         final timestamp = lastMessageData['timestamp']?.toDate();
         final lastMessageContent = lastMessageData['messageContent'] ?? '';
 
         return {
-          'username': lastMessageData['senderName'],
-          'profilepicture': '',  // Replace with your logic to get the profile picture
-          'email': '',  // Replace with your logic to get the email
-          'phonenumber': '',  // Replace with your logic to get the phone number
+          'senderName': lastMessageData['senderName'],
+          'senderEmail': lastMessageData['senderEmail'],
           'lastMessageContent': lastMessageContent,
           'lastMessageTimestamp': timestamp,
         };
@@ -87,7 +96,8 @@ class MessageController extends GetxController {
     }
   }
 
-  String getChatId(String userId1, String userId2) {
+
+  String getConversationID(String userId1, String userId2) {
     List<String> sortedIds = [userId1, userId2]..sort();
     return sortedIds.join('_');
   }

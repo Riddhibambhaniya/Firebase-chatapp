@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 import '../../../models/chatmessage.dart';
-import '../Messagepage/messagepage_controller.dart';
+
 
 class ChatController extends GetxController {
   RxString lastReceivedMessage = ''.obs;
@@ -186,8 +186,6 @@ class ChatController extends GetxController {
       });
     }
   }
-
-
   Future<String?> sendMessage(
       String recipientId, String messageContent, String? imageUrl) async {
     try {
@@ -230,7 +228,7 @@ class ChatController extends GetxController {
         messageEditingController.clear();
 
         listenForMessages(recipientId);
-        updateMessagePage();
+       // updateMessagePage();
 
         return chatId;
       }
@@ -260,6 +258,8 @@ class ChatController extends GetxController {
         'recipientId': otherUserId,
         'senderName': userName,
         'messageContent': messageContent,
+        'timestamp': FieldValue.serverTimestamp(),
+
       });
     } catch (e) {
       print('Failed to update chat history: $e');
@@ -267,9 +267,9 @@ class ChatController extends GetxController {
   }
 
 
-  void updateMessagePage() {
-    Get.find<MessageController>().fetchCurrentUserLastMessages();
-  }
+  // void updateMessagePage() {
+  //   Get.find<MessageController>().fetchCurrentUserRecentChats();
+  // }
 
   @override
   void onClose() {

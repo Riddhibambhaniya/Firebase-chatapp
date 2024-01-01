@@ -150,7 +150,9 @@ class UserRow extends StatelessWidget {
                   children: [
                     Text(userData1.name, style: appbar2),
                     Text(
-                      userData1.lastMessageContent ?? '', // Display last message content
+                      userData1.lastMessageContent?.isNotEmpty ?? false
+                          ? userData1.lastMessageContent!
+                          : 'No messages yet', // Display a placeholder if no message
                       style: appbar1,
                     ),
                     Text(
