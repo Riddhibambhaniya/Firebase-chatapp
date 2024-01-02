@@ -25,7 +25,7 @@ class EditProfileView extends GetView<MyProfileController> {
                 child: IconButton(
                   icon: Icon(Icons.arrow_back, color: ColorConstants.white),
                   onPressed: () {
-                    Get.to(() => Routes.myprofile);
+                    Get.to(() => MyProfileView());
                   },
                 ),
               ),
@@ -46,10 +46,10 @@ class EditProfileView extends GetView<MyProfileController> {
               SizedBox(
                 height: 15,
               ),
-              Text(
+              Obx(() => Text(
                 controller.userName.value,
                 style: appbar,
-              ),
+              )),
               SizedBox(
                 height: 50,
               ),
@@ -91,8 +91,6 @@ class EditProfileView extends GetView<MyProfileController> {
                           },
                         ),
                       ),
-
-
                       SizedBox(
                         height: 50,
                       ),
@@ -111,7 +109,13 @@ class EditProfileView extends GetView<MyProfileController> {
                                 _displayNameController.text,
                                 _emailController.text,
                               );
-                              // Get.back(); // Close the Edit Profile screen
+                              Get.snackbar(
+                                'Success',
+                                'Profile changes saved successfully!',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.green,
+                                colorText: Colors.white,
+                              );
                             }
                           },
                           child: Text('Save Changes'),

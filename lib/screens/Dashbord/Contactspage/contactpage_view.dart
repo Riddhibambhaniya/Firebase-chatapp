@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../models/contectpagemodel.dart';
-import '../../../routes/app_routes.dart';
 import '../../../styles/text_style.dart';
 import '../../Sign inscreen/signin_controller.dart';
 import '../../searchscreen/searchscreen_view.dart';
@@ -69,7 +68,7 @@ class ContactPage extends GetView<ContactController> {
                             final userData = controller.userList[index];
                             final showHeader = index == 0 ||
                                 userData.name[0] !=
-                                    controller.userList[index - 1].name[0];
+                                    controller.userList[index - 1].name.toUpperCase();
 
                             return Column(
                               mainAxisSize: MainAxisSize.min,
@@ -79,14 +78,17 @@ class ContactPage extends GetView<ContactController> {
                                     padding:
                                         const EdgeInsets.only(right: 310.0),
                                     child: Text(
-                                      userData.name[0],
+                                      userData.name.toUpperCase()[0],
                                       style: appbar2,
                                     ),
                                   ),
                                 SizedBox(
-                                  height: 10,
+                                  height: 30,
                                 ),
                                 UserRow1(userData1: userData),
+                                SizedBox(
+                                  height: 20,
+                                ),
                               ],
                             );
                           },
@@ -129,7 +131,6 @@ class UserRow1 extends StatelessWidget {
           // Navigate to the ChatPage with user details
           Get.to(() => ChatPage(), arguments: {
             'uuid': userData1.uuid,
-            // Assuming you have a userUuid property in UserData1
             'name': userData1.name,
             'email': userData1.email,
             'chatId': chatId,
@@ -144,7 +145,7 @@ class UserRow1 extends StatelessWidget {
             )),
           ),
           child: Padding(
-            padding: const EdgeInsets.only(right: 40.0, top: 5.0, bottom: 5.0),
+            padding: const EdgeInsets.only(right: 10.0, top: 5.0, bottom: 5.0,left:30),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -169,13 +170,18 @@ class UserRow1 extends StatelessWidget {
                 //         : null, // Display nothing when there is an image
                 //   ),
                 // ),
-                SizedBox(width: 10.0),
+                SizedBox(
+                  height: 20,
+                ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(userData1.name, style: appbar2),
+                      Text(userData1.name.toUpperCase(), style: appbar2),
+                      SizedBox(
+                        height: 10,
+                      ),
                       Text(userData1.email, style: appbar1),
                     ],
                   ),

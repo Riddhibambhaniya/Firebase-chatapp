@@ -5,8 +5,8 @@ class UserData1 {
   final String name;
  // final String profilepicture;
   final String email;
-  // final int phoneNumber; // Update the type to int
-  late final String? lastMessageContent;
+   //final int phoneNumber; // Update the type to int
+   final String? lastMessageContent;
   final DateTime? lastMessageTimestamp;
 
   UserData1({
@@ -14,7 +14,7 @@ class UserData1 {
     required this.name,
     //required this.profilepicture,
     required this.email,
-    // required this.phoneNumber,
+     //required this.phoneNumber,
     this.lastMessageContent,
     this.lastMessageTimestamp,
   });
@@ -25,7 +25,7 @@ class UserData1 {
       name: map['uname'] ?? '',
       // profilepicture: map['profilepicture'] ?? '',
       email: map['email'] ?? '',
-      // phoneNumber: map['phoneNumber'] ?? 0, // Default value or handle accordingly
+       //phoneNumber: map['phoneNumber'] ?? 0, // Default value or handle accordingly
       lastMessageContent: map['lastMessageContent'],
       lastMessageTimestamp: map['lastMessageTimestamp'] != null
           ? (map['lastMessageTimestamp'] as Timestamp).toDate()

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:project_structure_with_getx/screens/Dashbord/dashbord_view.dart';
-import 'package:project_structure_with_getx/styles/colorconstants.dart';
 
+import 'package:project_structure_with_getx/styles/colorconstants.dart';
 import '../../routes/app_routes.dart';
 import '../../styles/text_style.dart';
-
+import '../Dashbord/dashbord_view.dart';
 import 'editprofile/editprofile_view.dart';
 import 'myprofile_controller.dart';
 
@@ -25,7 +24,7 @@ class MyProfileView extends GetView<MyProfileController> {
                 child: IconButton(
                   icon: Icon(Icons.arrow_back, color: ColorConstants.white),
                   onPressed: () {
-                    Get.to(() =>  Routes.home);
+                    Get.to(() => DashboardScreen ());
                   },
                 ),
               ),
@@ -46,10 +45,10 @@ class MyProfileView extends GetView<MyProfileController> {
               SizedBox(
                 height: 15,
               ),
-              Text(
+              Obx(() => Text(
                 controller.userName.value,
                 style: appbar,
-              ),
+              )),
               SizedBox(
                 height: 50,
               ),
@@ -109,57 +108,52 @@ class MyProfileView extends GetView<MyProfileController> {
                     SizedBox(
                       height: 70,
                     ),
-
-                       Center(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            primary: Colors.black,
-                            onPrimary: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30.0),
-                            ),
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.black,
+                          onPrimary: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0),
                           ),
-                          onPressed: () {
-                            // Navigate to the edit profile screen
-                            Get.to(() => Routes.editprofileview);
-                          },
-                          child: Text("Edit Profile"),
                         ),
+                        onPressed: () {
+                          Get.to(() => EditProfileView());
+                        },
+                        child: Text("Edit Profile"),
                       ),
-
+                    ),
                     SizedBox(
                       height: 40,
                     ),
-
-                       Center(
-                         child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            primary: Colors.black,
-                            onPrimary: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30.0),
-                            ),
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.black,
+                          onPrimary: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30.0),
                           ),
-                          onPressed: () {
-                            Get.defaultDialog(
-                              title: "Log Out",
-                              titleStyle: textBolds,
-                              middleText: "Are you sure you want to log out?",
-                              middleTextStyle: appbar2,
-                              textConfirm: "Yes",
-                              textCancel: "No",
-                              onConfirm: () {
-                                controller.logOut();
-                              },
-                              onCancel: () {
-                                Get.back();
-                              },
-                            );
-                          },
-                          child: Text("Log Out"),
+                        ),
+                        onPressed: () {
+                          Get.defaultDialog(
+                            title: "Log Out",
+                            titleStyle: textBolds,
+                            middleText: "Are you sure you want to log out?",
+                            middleTextStyle: appbar2,
+                            textConfirm: "Yes",
+                            textCancel: "No",
+                            onConfirm: () {
+                              controller.logOut();
+                            },
+                            onCancel: () {
+                              Get.back();
+                            },
+                          );
+                        },
+                        child: Text("Log Out"),
                       ),
-                       ),
-
+                    ),
                   ],
                 ),
               )

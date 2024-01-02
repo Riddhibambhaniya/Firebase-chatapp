@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+
 
 import '../../../models/contectpagemodel.dart';
-
 import '../../../styles/text_style.dart';
 import '../../My profile/myprofile_controller.dart';
 import '../../My profile/myprofile_view.dart';
 import '../../searchscreen/searchscreen_view.dart';
-
 import 'messagepage_controller.dart';
 import '../chatpage/chatpage_view.dart';
 
@@ -16,6 +16,7 @@ class MessagePage extends GetView<MessageController> {
 
   @override
   Widget build(BuildContext context) {
+    final myProfileController = Get.put(MyProfileController());
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -29,7 +30,9 @@ class MessagePage extends GetView<MessageController> {
                 onPressed: () => Get.to(() => SearchScreen()),
               ),
             ),
-            title: Center(child: Text('HOME', style: TextStyle(color: Colors.white))),
+            title: Center(
+              child: Text('Chats', style: TextStyle(color: Colors.white)),
+            ),
             actions: [
               GestureDetector(
                 onTap: () {
@@ -39,7 +42,8 @@ class MessagePage extends GetView<MessageController> {
                   padding: const EdgeInsets.only(right: 24.0),
                   child: Obx(() {
                     final userController = Get.find<MyProfileController>();
-                    final userProfilePic = userController.userProfilePic.value;
+                    final userProfilePic =
+                        userController.userProfilePic.value;
                     final userName = userController.userName.value;
 
                     return CircleAvatar(
@@ -50,7 +54,9 @@ class MessagePage extends GetView<MessageController> {
                           : null,
                       child: userProfilePic.isEmpty
                           ? Text(
-                        userName.isNotEmpty ? userName[0].toUpperCase() : '',
+                        userName.isNotEmpty
+                            ? userName[0].toUpperCase()
+                            : '',
                         style: TextStyle(
                           fontSize: 20.0,
                           fontWeight: FontWeight.bold,
@@ -69,7 +75,6 @@ class MessagePage extends GetView<MessageController> {
             left: 0,
             right: 0,
             child: Container(
-              //height: MediaQuery.of(context).size.height - 120.0,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30.0),
@@ -79,15 +84,22 @@ class MessagePage extends GetView<MessageController> {
               ),
               width: 400,
               height: 1000,
-              child: Obx(
-                    () => ListView.separated(
-                  itemCount: controller.userData.length,
-                  separatorBuilder: (context, index) => SizedBox(height: 15.0),
-                  itemBuilder: (context, index) {
-                    return UserRow(userData1: controller.userData[index]);
-                  },
-                ),
-              ),
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else {
+                  return ListView.separated(
+                    itemCount: controller.userData.length,
+                    separatorBuilder: (context, index) =>
+                        SizedBox(height: 15.0),
+                    itemBuilder: (context, index) {
+                      return UserRow(userData: controller.userData[index]);
+                    },
+                  );
+                }
+              }),
             ),
           ),
         ],
@@ -97,42 +109,46 @@ class MessagePage extends GetView<MessageController> {
 }
 
 class UserRow extends StatelessWidget {
-   final UserData1 userData1;
+  final UserData1 userData;
 
-  UserRow({required this.userData1});
+  UserRow({required this.userData});
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final timeDifference = userData.lastMessageTimestamp != null
+        ? now.difference(userData.lastMessageTimestamp!)
+        : Duration.zero;
+
+    final formattedTimeDifference = _formatTimeDifference(timeDifference);
+
     return GestureDetector(
       onTap: () {
-        // Navigate to the ChatPage with user details
         Get.to(() => ChatPage(), arguments: {
-          'uuid': userData1.uuid, // Assuming you have a userUuid property in UserData1
-          'name': userData1.name,
-          'email': userData1.email,
+          'uuid': userData.uuid,
+          'name': userData.name,
+          'email': userData.email ?? '',
         });
       },
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.only(right: 40.0, top: 5.0, bottom: 5.0),
+      child: Padding(
+        padding: const EdgeInsets.only(
+            left: 9.0, right: 9.0, bottom: 15.0, top: 0.0),
+        child: Container(
+          color: Colors.white,
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Padding(
-              //   padding: const EdgeInsets.only(left: 30.0, right: 10.0, bottom: 5.0),
+              //   padding: const EdgeInsets.only(left: 15.0),
               //   child: CircleAvatar(
               //     radius: 25.0,
               //     backgroundColor: Colors.black,
-              //     backgroundImage: (userData1.profilepicture.isNotEmpty)
-              //         ? AssetImage(userData1.profilepicture)
+              //     backgroundImage: userData.avatar.isNotEmpty
+              //         ? AssetImage(userData.avatar)
               //         : null,
-              //     child: (userData1.profilepicture.isEmpty)
+              //     child: userData.avatar.isEmpty
               //         ? Text(
-              //       userData1.username.isNotEmpty
-              //           ? userData1.username[0].toUpperCase()
+              //       userData.username.isNotEmpty
+              //           ? userData.username[0].toUpperCase()
               //           : '',
               //       style: TextStyle(
               //         fontSize: 15.0,
@@ -142,27 +158,18 @@ class UserRow extends StatelessWidget {
               //         : null,
               //   ),
               // ),
-              SizedBox(width: 10.0),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(userData1.name, style: appbar2),
-                    Text(
-                      userData1.lastMessageContent?.isNotEmpty ?? false
-                          ? userData1.lastMessageContent!
-                          : 'No messages yet', // Display a placeholder if no message
-                      style: appbar1,
-                    ),
-                    Text(
-                      userData1.lastMessageTimestamp != null
-                          ? '${_formatTimestamp(userData1.lastMessageTimestamp!)} ago'
-                          : '',
-                      style: appbar1,
-                    ),
-                  ],
-                ),
+              SizedBox(width: 20.0),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(userData.name, style: appbar2),
+                  Text(userData.lastMessageContent ?? '', style: appbar1),
+                ],
+              ),
+              Spacer(),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Text(formattedTimeDifference),
               ),
             ],
           ),
@@ -171,15 +178,15 @@ class UserRow extends StatelessWidget {
     );
   }
 
-  String _formatTimestamp(DateTime timestamp) {
-    // You can use your own logic to format the timestamp as needed
-    // For example, using the intl package for more sophisticated formatting
-    // Here, we'll just show the minutes ago as in your existing code
-    final now = DateTime.now();
-    final timeDifference = now.difference(timestamp);
-
-    return timeDifference.inMinutes > 0
-        ? '${timeDifference.inMinutes} min'
-        : 'just now';
+  String _formatTimeDifference(Duration timeDifference) {
+    if (timeDifference.inDays > 0) {
+      return DateFormat.yMMMd().add_jm().format(DateTime.now().subtract(timeDifference));
+    } else if (timeDifference.inHours > 0) {
+      return "${timeDifference.inHours}h ago";
+    } else if (timeDifference.inMinutes > 0) {
+      return "${timeDifference.inMinutes} min ago";
+    } else {
+      return "just now";
+    }
   }
 }

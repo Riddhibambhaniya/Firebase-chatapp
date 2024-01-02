@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 import '../../../models/chatmessage.dart';
+import '../Messagepage/messagepage_controller.dart';
 
 
 class ChatController extends GetxController {
@@ -216,7 +217,7 @@ class ChatController extends GetxController {
           'messageContent': messageContent,
           'timestamp': FieldValue.serverTimestamp(),
           'senderName': senderName,
-          'last-message': imageUrl != null ? 'Image' : messageContent,
+          'last-message': messageContent,
           'imageUrl': imageUrl,
         });
 
@@ -258,6 +259,7 @@ class ChatController extends GetxController {
         'recipientId': otherUserId,
         'senderName': userName,
         'messageContent': messageContent,
+        'last-message': messageContent,
         'timestamp': FieldValue.serverTimestamp(),
 
       });
