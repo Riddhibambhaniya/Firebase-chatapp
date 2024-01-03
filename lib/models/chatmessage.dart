@@ -27,7 +27,7 @@ class ChatMessage {
       messageContent: map['messageContent'] ?? '',
       timestamp: map['timestamp'] ?? Timestamp.now(),
       senderName: map['senderName'] ?? '',
-     // imageUrl: map['imageUrl'] ?? '',
+     imageUrl: map['imageUrl'] ?? '',
     );
   }
 }

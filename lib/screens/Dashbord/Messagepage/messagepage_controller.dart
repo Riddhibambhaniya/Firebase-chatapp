@@ -184,7 +184,7 @@ class MessageController extends GetxController {
         }
 
 
-        // Sort userData based on lastMessageTimestamp in descending order
+
         userData.sort((a, b) =>
             (b.lastMessageTimestamp ?? DateTime(0))
                 .compareTo(a.lastMessageTimestamp ?? DateTime(0)));

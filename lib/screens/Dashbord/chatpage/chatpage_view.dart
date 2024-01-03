@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import 'package:flutter/foundation.dart' as foundation;
@@ -87,174 +90,178 @@ class ChatPage extends GetView<ChatController> {
         ),
       ),
       body: Column(
-          children: <Widget>[
-      Expanded(
-      child: Obx(() => ListView.builder(
-      reverse: false,
-      itemCount: controller.messages.length,
-      itemBuilder: (context, index) {
-        final reversedIndex = controller.messages.length - 1 - index;
-        final message = controller.messages[reversedIndex];
-        final isUserMessage = message.senderId == senderId;
+        children: <Widget>[
+          Expanded(
+            child: Obx(() => ListView.builder(
+                  reverse: false,
+                  itemCount: controller.messages.length,
+                  itemBuilder: (context, index) {
+                    final reversedIndex =
+                        controller.messages.length - 1 - index;
+                    final message = controller.messages[reversedIndex];
+                    final isUserMessage = message.senderId == senderId;
 
-        if (isTodayMessage(message) && !_todaySeparatorShown) {
-          _todaySeparatorShown = true;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Center(
-                  child: Text(
-                    'Today',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17,
+                    if (isTodayMessage(message) && !_todaySeparatorShown) {
+                      _todaySeparatorShown = true;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Center(
+                              child: Text(
+                                'Today',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                            ),
+                          ),
+                          buildMessageWidget(message, senderId),
+                        ],
+                      );
+                    } else if (isYesterdayMessage(message) &&
+                        !_yesterdaySeparatorShown) {
+                      _yesterdaySeparatorShown = true;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Center(
+                              child: Text(
+                                'Yesterday',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                            ),
+                          ),
+                          buildMessageWidget(message, senderId),
+                        ],
+                      );
+                    } else {
+                      return buildMessageWidget(message, senderId);
+                    }
+                  },
+                )),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(children: [
+                Expanded(
+                    child: TextField(
+                  controller: _messageController,
+                  decoration: InputDecoration(
+                    hintText: 'Type your message...',
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    filled: true,
+                    fillColor:
+                        Colors.white, // Adjust the background color as needed
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                      borderSide: BorderSide(
+                        color: Colors.grey, // Specify the border color
+                      ),
                     ),
                   ),
+                )),
+                IconButton(
+                  icon: Icon(Icons.camera_alt),
+                  onPressed: () async {
+                    controller.pickImage(userData?['uuid']);
+                  },
                 ),
-              ),
-              buildMessageWidget(message, senderId),
-            ],
-          );
-        } else if (isYesterdayMessage(message) &&
-            !_yesterdaySeparatorShown) {
-          _yesterdaySeparatorShown = true;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Center(
-                  child: Text(
-                    'Yesterday',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17,
-                    ),
-                  ),
+
+
+
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: () {
+                    controller.sendMessage(
+                      userData?['uuid'],
+                      _messageController.text,
+                      null,
+                    );
+                    final user = FirebaseAuth.instance.currentUser;
+                    final sentMessage = ChatMessage(
+                      senderId: senderId ?? '',
+                      recipientId: userData?['uuid'] ?? '',
+                      messageContent: _messageController.text,
+                      timestamp: Timestamp.now(),
+                      senderName: user?.displayName ?? 'You',
+                    );
+
+                    controller.messages.add(sentMessage);
+                    _messageController.clear();
+                  },
                 ),
-              ),
-              buildMessageWidget(message, senderId),
-            ],
-          );
-        } else {
-          return buildMessageWidget(message, senderId);
-        }
-      },
-    )),
-    ),
-    Align(
-    alignment: Alignment.bottomCenter,
-    child: Padding(
-    padding: const EdgeInsets.all(10.0),
-    child: Row(
-    children: [
-    Expanded(
-    child:
-    TextField(
-    controller: _messageController,
-    decoration: InputDecoration(
-    hintText: 'Type your message...',
-    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-    filled: true,
-    fillColor: Colors.white, // Adjust the background color as needed
-    border: OutlineInputBorder(
-    borderRadius: BorderRadius.circular(30.0),
-    borderSide: BorderSide(
-    color: Colors.grey, // Specify the border color
-    ),
-    ),
-    ),
-    )
-
-    ),
-    IconButton(
-    icon: Icon(Icons.camera_alt),
-    onPressed: () {
-    controller.pickImage(userData?['uuid']);
-    },
-    ),
-    IconButton(
-    icon: Icon(Icons.send),
-    onPressed: (){
-    controller.sendMessage(
-    userData?['uuid'],
-    _messageController.text,
-    null,
-    );
-    final user = FirebaseAuth.instance.currentUser;
-    final sentMessage = ChatMessage(
-    senderId: senderId ?? '',
-    recipientId: userData?['uuid'] ?? '',
-    messageContent: _messageController.text,
-    timestamp: Timestamp.now(),
-    senderName: user?.displayName ?? 'You',
-    );
-
-    controller.messages.add(sentMessage);
-    _messageController.clear();
-    },
-
-
-  ),
-  ]),
-  ),
-    )],
-  ),
-  );
-}
-
-Widget buildMessageWidget(ChatMessage message, String? senderId) {
-  String formattedTime = DateFormat.Hm().format(message.timestamp.toDate());
-
-  return Align(
-    alignment: message.senderId == senderId
-        ? Alignment.centerRight
-        : Alignment.centerLeft,
-    child: Padding(
-      padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 15),
-      child: Container(
-        padding: EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: message.senderId == senderId
-              ? Color(0xFF20A090)
-              : Color(0xFFF2F7FB),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (message.imageUrl != null)
-              Image.network(
-                message.imageUrl!,
-                width: 200,
-                height: 200,
-              )
-            else
-              Text(
-                message.messageContent,
-                style: TextStyle(
-                  color:
-                  message.senderId == senderId ? Colors.white : Colors.black,
-                ),
-              ),
-            SizedBox(height: 5),
-            Text(
-              '${message.senderName} • $formattedTime',
-              style: TextStyle(
-                color: message.senderId == senderId
-                    ? Colors.white70
-                    : Colors.black54,
-                fontSize: 12,
-              ),
+              ]),
             ),
-          ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget buildMessageWidget(ChatMessage message, String? senderId) {
+    String formattedTime = DateFormat.Hm().format(message.timestamp.toDate());
+
+    return Align(
+      alignment: message.senderId == senderId
+          ? Alignment.centerRight
+          : Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 15),
+        child: Container(
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: message.senderId == senderId
+                ? Color(0xFF20A090)
+                : Color(0xFFF2F7FB),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (message.imageUrl != null && message.imageUrl!.startsWith('http'))
+                Image.network(
+                  message.imageUrl!,
+                  width: 200,
+                  height: 200,
+                )
+              else
+                Text(
+                  message.messageContent,
+                  style: TextStyle(
+                    color: message.senderId == senderId
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
+              SizedBox(height: 5),
+              Text(
+                '${message.senderName} • $formattedTime',
+                style: TextStyle(
+                  color: message.senderId == senderId
+                      ? Colors.white70
+                      : Colors.black54,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
+
+
 }

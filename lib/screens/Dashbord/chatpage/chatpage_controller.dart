@@ -9,7 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 import '../../../models/chatmessage.dart';
-import '../Messagepage/messagepage_controller.dart';
+
 
 
 class ChatController extends GetxController {
@@ -97,12 +97,13 @@ class ChatController extends GetxController {
     );
   }
 
+
   Future<void> pickImage(String recipientId) async {
     final ImagePicker _picker = ImagePicker();
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
-      String? imageUrl = await uploadImage(File(image.path) as String);
+      String? imageUrl = await uploadImage(image.path);
       sendMessage(recipientId, 'Image', imageUrl);
     }
   }
@@ -122,6 +123,7 @@ class ChatController extends GetxController {
         final storageTaskSnapshot = await storageUploadTask;
 
         final imageUrl = await storageTaskSnapshot.ref.getDownloadURL();
+        print('Image URL: $imageUrl'); // Add this line
         return imageUrl;
       }
     } catch (e) {
@@ -129,6 +131,7 @@ class ChatController extends GetxController {
       return null;
     }
   }
+
 
   void listenForMessages(String recipientId) {
     print('Listening for messages with chatId: $chatId');
@@ -187,13 +190,16 @@ class ChatController extends GetxController {
       });
     }
   }
+
   Future<String?> sendMessage(
-      String recipientId, String messageContent, String? imageUrl) async {
+      String recipientId,
+      String messageContent,
+      String? imageUrl,
+      ) async {
     try {
       final user = _auth.currentUser;
       final senderId = user?.uid;
-      final senderObj =
-      await FirebaseFirestore.instance.collection('users').doc(senderId).get();
+      final senderObj = await FirebaseFirestore.instance.collection('users').doc(senderId).get();
       final senderName = senderObj['name'];
 
       if (senderId != null) {
@@ -229,7 +235,6 @@ class ChatController extends GetxController {
         messageEditingController.clear();
 
         listenForMessages(recipientId);
-       // updateMessagePage();
 
         return chatId;
       }
@@ -238,6 +243,11 @@ class ChatController extends GetxController {
       return null;
     }
   }
+
+
+
+
+
 
   Future<void> updateChatHistory(
       String userId,
