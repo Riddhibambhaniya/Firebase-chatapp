@@ -1,26 +1,27 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../../models/contectpagemodel.dart';
 import '../../../styles/text_style.dart';
 import '../../My profile/myprofile_controller.dart';
 import '../../My profile/myprofile_view.dart';
 import '../../searchscreen/searchscreen_view.dart';
-import 'messagepage_controller.dart';
 import '../chatpage/chatpage_view.dart';
+import 'messagepage_controller.dart';
 
 class MessagePage extends GetView<MessageController> {
   final MessageController controller = Get.put(MessageController());
 
   @override
   Widget build(BuildContext context) {
-    final myProfileController = Get.put(MyProfileController());
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
+          // App Bar
           AppBar(
             backgroundColor: Colors.black,
             leading: Padding(
@@ -70,6 +71,8 @@ class MessagePage extends GetView<MessageController> {
               ),
             ],
           ),
+
+          // Message List
           Positioned(
             top: 120.0,
             left: 0,
@@ -85,20 +88,38 @@ class MessagePage extends GetView<MessageController> {
               width: 400,
               height: 1000,
               child: Obx(() {
-                if (controller.isLoading.value) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else {
-                  return ListView.separated(
-                    itemCount: controller.userData.length,
-                    separatorBuilder: (context, index) =>
-                        SizedBox(height: 15.0),
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: controller.userList.length,
                     itemBuilder: (context, index) {
-                      return UserRow(userData: controller.userData[index]);
+                      final userData = controller.userList[index];
+                      final showHeader = index == 0 ||
+                          userData.name[0] !=
+                              controller.userList[index - 1].name.toUpperCase();
+
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // if (showHeader)
+                          //   Padding(
+                          //     padding:
+                          //     const EdgeInsets.only(right: 310.0),
+                          //     child: Text(
+                          //       userData.name.toUpperCase()[0],
+                          //       style: appbar2,
+                          //     ),
+                          //   ),
+                          SizedBox(
+                            height: 30,
+                          ),
+                          UserRow1(userData1: userData),
+                          SizedBox(
+                            height: 20,
+                          ),
+                        ],
+                      );
                     },
                   );
-                }
               }),
             ),
           ),
@@ -107,77 +128,91 @@ class MessagePage extends GetView<MessageController> {
     );
   }
 }
+class UserRow1 extends StatelessWidget {
+  final UserData1 userData1;
 
-class UserRow extends StatelessWidget {
-  final UserData1 userData;
+  UserRow1({required this.userData1});
 
-  UserRow({required this.userData});
+  String getConversationID(String userID, String peerID) {
+    print("userID $userID");
+    print("peerID $peerID");
+    return userID.hashCode <= peerID.hashCode
+        ? '${userID}_$peerID'
+        : '${peerID}_$userID';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final timeDifference = userData.lastMessageTimestamp != null
-        ? now.difference(userData.lastMessageTimestamp!)
-        : Duration.zero;
-
-    final formattedTimeDifference = _formatTimeDifference(timeDifference);
-
     return GestureDetector(
-      onTap: () {
-        Get.to(() => ChatPage(), arguments: {
-          'uuid': userData.uuid,
-          'name': userData.name,
-          'email': userData.email ?? '',
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(
-            left: 9.0, right: 9.0, bottom: 15.0, top: 0.0),
-        child: Container(
-          color: Colors.white,
-          child: Row(
-            children: [
-              // Padding(
-              //   padding: const EdgeInsets.only(left: 15.0),
-              //   child: CircleAvatar(
-              //     radius: 25.0,
-              //     backgroundColor: Colors.black,
-              //     backgroundImage: userData.avatar.isNotEmpty
-              //         ? AssetImage(userData.avatar)
-              //         : null,
-              //     child: userData.avatar.isEmpty
-              //         ? Text(
-              //       userData.username.isNotEmpty
-              //           ? userData.username[0].toUpperCase()
-              //           : '',
-              //       style: TextStyle(
-              //         fontSize: 15.0,
-              //         fontWeight: FontWeight.bold,
-              //       ),
-              //     )
-              //         : null,
-              //   ),
-              // ),
-              SizedBox(width: 20.0),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(userData.name, style: appbar2),
-                  Text(userData.lastMessageContent ?? '', style: appbar1),
-                ],
-              ),
-              Spacer(),
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: Text(formattedTimeDifference),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+        onTap: () async {
+          final currentUser = FirebaseAuth.instance.currentUser;
 
+          final chatId =
+          getConversationID(userData1.uuid, currentUser?.uid ?? "");
+
+          // Navigate to the ChatPage with user details
+          Get.to(() => ChatPage(), arguments: {
+            'uuid': userData1.uuid,
+            'name': userData1.name,
+            'email': userData1.email,
+            'chatId': chatId,
+          });
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+                bottom: BorderSide(
+                  color: Colors.grey,
+                  width: 0.5,
+                )),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(right: 10.0, top: 5.0, bottom: 5.0,left:30),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Padding(
+                //   padding: const EdgeInsets.only(
+                //       left: 30.0, right: 10.0, bottom: 5.0),
+                //   child: CircleAvatar(
+                //     radius: 25.0, backgroundColor: Colors.black,
+                //     backgroundImage: (userData1.profilepicture.isNotEmpty)
+                //         ? AssetImage(userData1.profilepicture)
+                //         : null, // Use null when there is no image
+                //     child: (userData1.profilepicture.isEmpty)
+                //         ? Text(
+                //             userData1.username.isNotEmpty
+                //                 ? userData1.username[0].toUpperCase()
+                //                 : '', // Display the first letter of the username
+                //             style: TextStyle(
+                //               fontSize: 15.0,
+                //               fontWeight: FontWeight.bold,
+                //             ),
+                //           )
+                //         : null, // Display nothing when there is an image
+                //   ),
+                // ),
+                SizedBox(
+                  height: 20,
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(userData1.name.toUpperCase(), style: appbar2),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Text(userData1.email, style: appbar1),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ));
+  }
   String _formatTimeDifference(Duration timeDifference) {
     if (timeDifference.inDays > 0) {
       return DateFormat.yMMMd().add_jm().format(DateTime.now().subtract(timeDifference));
