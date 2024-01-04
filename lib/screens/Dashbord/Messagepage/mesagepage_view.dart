@@ -1,9 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
 import '../../../models/contectpagemodel.dart';
 import '../../../styles/text_style.dart';
 import '../../My profile/myprofile_controller.dart';
@@ -88,31 +85,19 @@ class MessagePage extends GetView<MessageController> {
               width: 400,
               height: 1000,
               child: Obx(() {
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: controller.userList.length,
-                    itemBuilder: (context, index) {
-                      final userData = controller.userList[index];
-                      final showHeader = index == 0 ||
-                          userData.name[0] !=
-                              controller.userList[index - 1].name.toUpperCase();
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: controller.userData.length,
+                  itemBuilder: (context, index) {
+                    final chat = controller.userData[index];
+                    final userData = chat.userData;
 
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // if (showHeader)
-                          //   Padding(
-                          //     padding:
-                          //     const EdgeInsets.only(right: 310.0),
-                          //     child: Text(
-                          //       userData.name.toUpperCase()[0],
-                          //       style: appbar2,
-                          //     ),
-                          //   ),
-                          SizedBox(
-                            height: 30,
-                          ),
-                          UserRow1(userData1: userData),
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(height: 30),
+                        UserRow1(userData1: userData),
+                        SizedBox(height: 20),
                           SizedBox(
                             height: 20,
                           ),
@@ -195,33 +180,39 @@ class UserRow1 extends StatelessWidget {
                 SizedBox(
                   height: 20,
                 ),
-                Expanded(
-                  child: Column(
+                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(userData1.name.toUpperCase(), style: appbar2),
-                      SizedBox(
-                        height: 10,
+                      Text(userData1.name, style: appbar2),
+                      Text(
+                        userData1.lastMessageContent ?? '', // Display last message content
+                        style: appbar1,
                       ),
-                      Text(userData1.email, style: appbar1),
+
                     ],
                   ),
+                Text(
+                  userData1.lastMessageTimestamp != null
+                      ? '${_formatTimestamp(userData1.lastMessageTimestamp!)} ago'
+                      : '',
+                  style: appbar1,
                 ),
               ],
             ),
           ),
-        ));
+        ),
+    );
   }
-  String _formatTimeDifference(Duration timeDifference) {
-    if (timeDifference.inDays > 0) {
-      return DateFormat.yMMMd().add_jm().format(DateTime.now().subtract(timeDifference));
-    } else if (timeDifference.inHours > 0) {
-      return "${timeDifference.inHours}h ago";
-    } else if (timeDifference.inMinutes > 0) {
-      return "${timeDifference.inMinutes} min ago";
-    } else {
-      return "just now";
-    }
+  String _formatTimestamp(DateTime timestamp) {
+    // You can use your own logic to format the timestamp as needed
+    // For example, using the intl package for more sophisticated formatting
+    // Here, we'll just show the minutes ago as in your existing code
+    final now = DateTime.now();
+    final timeDifference = now.difference(timestamp);
+
+    return timeDifference.inMinutes > 0
+        ? '${timeDifference.inMinutes} min'
+        : 'just now';
   }
 }

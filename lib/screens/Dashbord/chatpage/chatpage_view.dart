@@ -1,10 +1,10 @@
-import 'dart:io';
+
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:image_picker/image_picker.dart';
+
 import 'package:intl/intl.dart';
 
 import 'package:flutter/foundation.dart' as foundation;
@@ -24,6 +24,8 @@ class ChatPage extends GetView<ChatController> {
   Widget build(BuildContext context) {
     final arguments = Get.arguments as Map<String, dynamic>;
     final List<ChatMessage> chatMessages = arguments['chatMessages'] ?? [];
+    final Map<String, dynamic> chatDetails = arguments['chatDetails'];
+
 
     final Map<String, dynamic>? userData = Get.arguments;
     String? displayName = userData?['name'];

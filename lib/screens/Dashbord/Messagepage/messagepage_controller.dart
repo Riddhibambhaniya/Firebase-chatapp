@@ -111,20 +111,28 @@ class MessageController extends GetxController {
     }
   }
 
+
   Future<void> fetchCurrentUserRecentChats() async {
     try {
       final currentUser = _auth.currentUser;
       final senderId = currentUser?.uid;
 
       if (senderId != null) {
+        // Clear the userData list before fetching new data
         userData.clear();
 
+        // Set loading state to true
+        isLoading.value = true;
+
+        // Fetch recent messages for the current user
         final recentMessages = await _firestore
             .collection('chats')
             .where('members', arrayContains: senderId)
             .get();
 
+        // Process each chat to get the latest message and user details
         for (final doc in recentMessages.docs) {
+          final chatId = doc.id;
           final members = doc['members'] as List<dynamic>;
 
           if (members.isNotEmpty) {
@@ -135,7 +143,7 @@ class MessageController extends GetxController {
 
             if (otherUserId != null) {
               final lastMessageSnapshot = await _firestore
-                  .collection('chats/${doc.id}/messages')
+                  .collection('chats/$chatId/messages')
                   .orderBy('timestamp', descending: true)
                   .limit(1)
                   .get();
@@ -154,33 +162,83 @@ class MessageController extends GetxController {
                   ),
                   lastMessageContent: lastMessageContent,
                   lastMessageTimestamp: timestamp,
-                  messageCount: lastMessageSnapshot.size,
                 ));
               }
             }
           }
         }
 
+        // Sort the user list based on the most recent message timestamp
         userData.sort((a, b) =>
             (b.lastMessageTimestamp ?? DateTime(0))
                 .compareTo(a.lastMessageTimestamp ?? DateTime(0)));
+
+        // Set loading state to false
+        isLoading.value = false;
+
+        // Print recent chats
+        printRecentChats();
+
+        // Trigger a UI update
+        update();
       }
     } catch (e) {
       print('Failed to fetch recent chats: $e');
+      // Set loading state to false in case of an error
+      isLoading.value = false;
     }
   }
+
+
+
+  DateTime? getLastMessageTimestamp(String chatId, String userId) {
+    // Add your implementation here to fetch the last message timestamp
+    // using the provided chatId and userId.
+    // Return the timestamp as a DateTime object.
+
+    // For example, if you have a Firestore collection 'messages',
+    // you might fetch the last message like this:
+
+    // final lastMessage = await FirebaseFirestore.instance
+    //     .collection('chats/$chatId/messages')
+    //     .orderBy('timestamp', descending: true)
+    //     .limit(1)
+    //     .get();
+
+    // if (lastMessage.docs.isNotEmpty) {
+    //   final timestamp = lastMessage.docs.first['timestamp']?.toDate();
+    //   return timestamp;
+    // }
+
+    // Return null if there are no messages.
+    return null;
+  }
+
+  void printRecentChats() {
+    for (final chat in userData) {
+      print('Recent Chat:');
+      print('User Name: ${chat.userData.name ?? "N/A"}');
+      print('User Email: ${chat.userData.email ?? "N/A"}');
+      print('Last Message Content: ${chat.lastMessageContent ?? "N/A"}');
+      print('Last Message Timestamp: ${chat.lastMessageTimestamp ?? "N/A"}');
+      print('--------------------------');
+    }
+  }
+
+
+
 }
 
 class UserDataWithLatestMessage {
   final UserData1 userData;
-  final String lastMessageContent;
-  final DateTime? lastMessageTimestamp;
-  final int messageCount;
+  late final String lastMessageContent;
+  late final DateTime? lastMessageTimestamp;
+  // late final int messageCount;
 
   UserDataWithLatestMessage({
     required this.userData,
     required this.lastMessageContent,
     required this.lastMessageTimestamp,
-    required this.messageCount,
+    // required this.messageCount,
   });
 }

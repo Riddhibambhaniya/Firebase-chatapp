@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 import '../../../models/chatmessage.dart';
+import '../Messagepage/messagepage_controller.dart';
 
 
 
@@ -34,7 +35,6 @@ class ChatController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
     final String? recipientId = Get.arguments['uuid'];
     chatId = Get.arguments['chatId'] ?? generateChatId(
       FirebaseAuth.instance.currentUser?.uid ?? '',
@@ -44,6 +44,7 @@ class ChatController extends GetxController {
     listenForMessages(recipientId ?? '');
     initializeLocalNotifications();
   }
+
 
   String generateChatId(String userId1, String userId2) {
     List<String> sortedUserIds = [userId1, userId2]..sort();
@@ -107,6 +108,7 @@ class ChatController extends GetxController {
       sendMessage(recipientId, 'Image', imageUrl);
     }
   }
+
 
   Future<String?> uploadImage(String filePath) async {
     try {
@@ -279,9 +281,9 @@ class ChatController extends GetxController {
   }
 
 
-  // void updateMessagePage() {
-  //   Get.find<MessageController>().fetchCurrentUserRecentChats();
-  // }
+  void updateMessagePage() {
+    Get.find<MessageController>().fetchCurrentUserRecentChats();
+  }
 
   @override
   void onClose() {
