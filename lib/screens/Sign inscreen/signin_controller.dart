@@ -50,30 +50,36 @@ class SignInController extends GetxController {
                 .doc(userUid)
                 .get();
 
-            final userUuid = userDoc.data()?['uuid'];
-            final userName = userDoc.data()?['name'];
-            final userEmail = userDoc.data()?['email'];
+            if (userDoc.exists) {
+              final userUuid = userDoc.data()?['uuid'];
+              final userName = userDoc.data()?['name'];
+              final userEmail = userDoc.data()?['email'];
 
-            // Save user data to SharedPreferences
-            saveUserDataToSharedPreferences(userUuid, userName, userEmail);
+              // Save user data to SharedPreferences
+              saveUserDataToSharedPreferences(userUuid, userName, userEmail);
 
-            // Update MyProfileController
-            Get.find<MyProfileController>().updateProfileDetails(
-              userUuid: userUuid,
-              userName: userName,
-              userEmail: userEmail,
-            );
+              // Update MyProfileController
+              Get.find<MyProfileController>().updateProfileDetails(
+                userUuid: userUuid,
+                userName: userName,
+                userEmail: userEmail,
+              );
 
-            Get.toNamed(
-              Routes.home,
-              arguments: {
-                'uuid': userUuid,
-                'name': userName,
-                'email': userEmail,
-              },
-            );
+              Get.toNamed(
+                Routes.home,
+                arguments: {
+                  'uuid': userUuid,
+                  'name': userName,
+                  'email': userEmail,
+                },
+              );
+            } else {
+              print('Login failed: User document not found');
+              Get.snackbar('Login Error', 'Failed to log in: User not found',
+                  backgroundColor: Colors.red, colorText: Colors.white);
+            }
           } else {
-            print('Login failed: User not found');
+            print('Login failed: User UID is null');
             Get.snackbar('Login Error', 'Failed to log in: User not found',
                 backgroundColor: Colors.red, colorText: Colors.white);
           }
@@ -85,6 +91,7 @@ class SignInController extends GetxController {
       }
     }
   }
+
 
   void updateButtonColor() {
     isFormValid.value = validateEmail(email.value) == null &&

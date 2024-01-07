@@ -1,16 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../models/contectpagemodel.dart';
-import '../../../styles/text_style.dart';
 import '../../My profile/myprofile_controller.dart';
 import '../../My profile/myprofile_view.dart';
-import '../../searchscreen/searchscreen_view.dart';
+import '../chatpage/chatpage_controller.dart';
 import '../chatpage/chatpage_view.dart';
 import 'messagepage_controller.dart';
 
 class MessagePage extends GetView<MessageController> {
   final MessageController controller = Get.put(MessageController());
+  final MyProfileController controllers = Get.put(MyProfileController());
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +20,6 @@ class MessagePage extends GetView<MessageController> {
           // App Bar
           AppBar(
             backgroundColor: Colors.black,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 24.0),
-              child: IconButton(
-                icon: Icon(Icons.search, color: Colors.white),
-                onPressed: () => Get.to(() => SearchScreen()),
-              ),
-            ),
             title: Center(
               child: Text('Chats', style: TextStyle(color: Colors.white)),
             ),
@@ -74,38 +66,29 @@ class MessagePage extends GetView<MessageController> {
             top: 120.0,
             left: 0,
             right: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30.0),
-                  topRight: Radius.circular(30.0),
-                ),
-                color: Colors.white,
+            child: Container( decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(30.0),
+                topRight: Radius.circular(30.0),
               ),
+              color: Colors.white,
+            ),
               width: 400,
               height: 1000,
-              child: Obx(() {
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: controller.userData.length,
+              child: Obx(
+                    () => controller.ongoingChats.isNotEmpty
+                    ? ListView.builder(
+                  itemCount: controller.ongoingChats.length,
                   itemBuilder: (context, index) {
-                    final chat = controller.userData[index];
-                    final userData = chat.userData;
-
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(height: 30),
-                        UserRow1(userData1: userData),
-                        SizedBox(height: 20),
-                          SizedBox(
-                            height: 20,
-                          ),
-                        ],
-                      );
-                    },
-                  );
-              }),
+                    return MessageCard(
+                      userId: controller.ongoingChats[index],
+                    );
+                  },
+                )
+                    : Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
             ),
           ),
         ],
@@ -113,106 +96,46 @@ class MessagePage extends GetView<MessageController> {
     );
   }
 }
-class UserRow1 extends StatelessWidget {
-  final UserData1 userData1;
 
-  UserRow1({required this.userData1});
+class MessageCard extends StatelessWidget {
+  final String userId;
 
-  String getConversationID(String userID, String peerID) {
-    print("userID $userID");
-    print("peerID $peerID");
-    return userID.hashCode <= peerID.hashCode
-        ? '${userID}_$peerID'
-        : '${peerID}_$userID';
-  }
+  const MessageCard({
+    required this.userId,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: () async {
-          final currentUser = FirebaseAuth.instance.currentUser;
+      onTap: () {
+        // Navigate to chat screen with selected user
+        Get.to(() => ChatPage(), // Replace ChatPage with your actual chat page
+            binding: BindingsBuilder(() {
+              Get.put(ChatPageController())
+                ..selectedUserId = userId
+                ..loadMessages();
+            }));
+      },
+      child: Card(
+        child: ListTile(
+          title: FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              }
+              if (!snapshot.hasData) {
+                return Text('Unknown User');
+              }
 
-          final chatId =
-          getConversationID(userData1.uuid, currentUser?.uid ?? "");
+              String Name = snapshot.data!.get('name') ?? 'Unknown User';
 
-          // Navigate to the ChatPage with user details
-          Get.to(() => ChatPage(), arguments: {
-            'uuid': userData1.uuid,
-            'name': userData1.name,
-            'email': userData1.email,
-            'chatId': chatId,
-          });
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-                bottom: BorderSide(
-                  color: Colors.grey,
-                  width: 0.5,
-                )),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(right: 10.0, top: 5.0, bottom: 5.0,left:30),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Padding(
-                //   padding: const EdgeInsets.only(
-                //       left: 30.0, right: 10.0, bottom: 5.0),
-                //   child: CircleAvatar(
-                //     radius: 25.0, backgroundColor: Colors.black,
-                //     backgroundImage: (userData1.profilepicture.isNotEmpty)
-                //         ? AssetImage(userData1.profilepicture)
-                //         : null, // Use null when there is no image
-                //     child: (userData1.profilepicture.isEmpty)
-                //         ? Text(
-                //             userData1.username.isNotEmpty
-                //                 ? userData1.username[0].toUpperCase()
-                //                 : '', // Display the first letter of the username
-                //             style: TextStyle(
-                //               fontSize: 15.0,
-                //               fontWeight: FontWeight.bold,
-                //             ),
-                //           )
-                //         : null, // Display nothing when there is an image
-                //   ),
-                // ),
-                SizedBox(
-                  height: 20,
-                ),
-                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(userData1.name, style: appbar2),
-                      Text(
-                        userData1.lastMessageContent ?? '', // Display last message content
-                        style: appbar1,
-                      ),
-
-                    ],
-                  ),
-                Text(
-                  userData1.lastMessageTimestamp != null
-                      ? '${_formatTimestamp(userData1.lastMessageTimestamp!)} ago'
-                      : '',
-                  style: appbar1,
-                ),
-              ],
-            ),
+              return Text(Name);
+            },
           ),
         ),
+      ),
     );
-  }
-  String _formatTimestamp(DateTime timestamp) {
-    // You can use your own logic to format the timestamp as needed
-    // For example, using the intl package for more sophisticated formatting
-    // Here, we'll just show the minutes ago as in your existing code
-    final now = DateTime.now();
-    final timeDifference = now.difference(timestamp);
-
-    return timeDifference.inMinutes > 0
-        ? '${timeDifference.inMinutes} min'
-        : 'just now';
   }
 }

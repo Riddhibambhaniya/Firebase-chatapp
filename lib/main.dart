@@ -2,9 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:project_structure_with_getx/routes/app_pages.dart';
-
 import 'package:project_structure_with_getx/routes/app_routes.dart';
-
 import 'Firebase/auth_controller.dart';
 
 void main() async {

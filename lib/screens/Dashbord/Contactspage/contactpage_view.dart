@@ -1,18 +1,13 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../models/contectpagemodel.dart';
-import '../../../styles/text_style.dart';
-import '../../Sign inscreen/signin_controller.dart';
-import '../../searchscreen/searchscreen_view.dart';
+import '../chatpage/chatpage_controller.dart';
 import '../chatpage/chatpage_view.dart';
 import 'contactpage_controller.dart';
 
 class ContactPage extends GetView<ContactController> {
   final ContactController controller = Get.put(ContactController());
-  final SignInController signInController =
-      Get.put(SignInController()); // Initialize SignInController
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,18 +15,12 @@ class ContactPage extends GetView<ContactController> {
       body: Stack(
         children: [
           AppBar(
-              backgroundColor: Colors.black,
-              leading: Padding(
-                padding: const EdgeInsets.only(left: 24.0),
-                child: IconButton(
-                  icon: Icon(Icons.search, color: Colors.white),
-                  onPressed: () => Get.to(() => SearchScreen()),
-                ),
-              ),
-              title: Padding(
-                padding: const EdgeInsets.only(left: 78.0),
-                child: Text('Contacts', style: TextStyle(color: Colors.white)),
-              )),
+            backgroundColor: Colors.black,
+            title: Padding(
+              padding: const EdgeInsets.only(left: 78.0),
+              child: Text('Contacts', style: TextStyle(color: Colors.white)),
+            ),
+          ),
           Positioned(
             top: 120.0,
             left: 0,
@@ -55,45 +44,35 @@ class ContactPage extends GetView<ContactController> {
                     padding: const EdgeInsets.only(right: 215.0),
                     child: Text(
                       'My Contacts',
-                      style: appbar2,
+                      // style: appbar2, // You need to define appbar2 style
                     ),
                   ),
                   Expanded(
-                    child: GetBuilder<ContactController>(
-                      builder: (controller) {
-                        return ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: controller.userList.length,
-                          itemBuilder: (context, index) {
-                            final userData = controller.userList[index];
-                            final showHeader = index == 0 ||
-                                userData.name[0] !=
-                                    controller.userList[index - 1].name.toUpperCase();
-
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (showHeader)
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.only(right: 310.0),
-                                    child: Text(
-                                      userData.name.toUpperCase()[0],
-                                      style: appbar2,
-                                    ),
-                                  ),
-                                SizedBox(
-                                  height: 30,
-                                ),
-                                UserRow1(userData1: userData),
-                                SizedBox(
-                                  height: 20,
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
+                    child: Obx(
+                          () => controller.contacts.isNotEmpty
+                          ? ListView.builder(
+                        itemCount: controller.contacts.length,
+                        itemBuilder: (context, index) {
+                          return ContactCard(
+                            contact: controller.contacts[index],
+                            onTap: () {
+                              String selectedUserId =
+                                  controller.contacts[index].userId;
+                              Get.to(() => ChatPage(),
+                                  binding: BindingsBuilder(() {
+                                    Get.put(ChatPageController())
+                                      ..selectedUserId = selectedUserId
+                                      ..loadMessages();
+                                  }));
+                            },
+                            controller: controller,
+                            index: index,
+                          );
+                        },
+                      )
+                          : Center(
+                        child: CircularProgressIndicator(),
+                      ),
                     ),
                   ),
                 ],
@@ -106,89 +85,33 @@ class ContactPage extends GetView<ContactController> {
   }
 }
 
-class UserRow1 extends StatelessWidget {
-  final UserData1 userData1;
+class ContactCard extends StatelessWidget {
+  final ContactModel contact;
+  final VoidCallback onTap;
+  final ContactController controller;
+  final int index;
 
-  UserRow1({required this.userData1});
-
-  String getConversationID(String userID, String peerID) {
-    print("userID $userID");
-    print("peerID $peerID");
-    return userID.hashCode <= peerID.hashCode
-        ? '${userID}_$peerID'
-        : '${peerID}_$userID';
-  }
+  const ContactCard({
+    required this.contact,
+    required this.onTap,
+    required this.controller,
+    required this.index,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    bool isInOngoingChats = controller.ongoingChats.contains(contact.userId);
+
     return GestureDetector(
-        onTap: () async {
-          final currentUser = FirebaseAuth.instance.currentUser;
-
-          final chatId =
-              getConversationID(userData1.uuid, currentUser?.uid ?? "");
-
-          // Navigate to the ChatPage with user details
-          Get.to(() => ChatPage(), arguments: {
-            'uuid': userData1.uuid,
-            'name': userData1.name,
-            'email': userData1.email,
-            'chatId': chatId,
-          });
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-                bottom: BorderSide(
-              color: Colors.grey,
-              width: 0.5,
-            )),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(right: 10.0, top: 5.0, bottom: 5.0,left:30),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Padding(
-                //   padding: const EdgeInsets.only(
-                //       left: 30.0, right: 10.0, bottom: 5.0),
-                //   child: CircleAvatar(
-                //     radius: 25.0, backgroundColor: Colors.black,
-                //     backgroundImage: (userData1.profilepicture.isNotEmpty)
-                //         ? AssetImage(userData1.profilepicture)
-                //         : null, // Use null when there is no image
-                //     child: (userData1.profilepicture.isEmpty)
-                //         ? Text(
-                //             userData1.username.isNotEmpty
-                //                 ? userData1.username[0].toUpperCase()
-                //                 : '', // Display the first letter of the username
-                //             style: TextStyle(
-                //               fontSize: 15.0,
-                //               fontWeight: FontWeight.bold,
-                //             ),
-                //           )
-                //         : null, // Display nothing when there is an image
-                //   ),
-                // ),
-                SizedBox(
-                  height: 20,
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(userData1.name.toUpperCase(), style: appbar2),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Text(userData1.email, style: appbar1),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ));
+      onTap: onTap,
+      child: Card(
+        color: isInOngoingChats ? Colors.green : null, // Highlight ongoing chats
+        child: ListTile(
+          title: Text(controller.contacts[index].name),
+        ),
+      ),
+    );
   }
 }
+

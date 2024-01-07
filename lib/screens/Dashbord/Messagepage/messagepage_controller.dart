@@ -1,244 +1,51 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-
-import '../../../models/contectpagemodel.dart';
+import '../chatpage/chatpage_view.dart';
 
 class MessageController extends GetxController {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  RxBool isLoading = true.obs;
-  final RxList<UserDataWithLatestMessage> userData = <UserDataWithLatestMessage>[].obs;
-  final RxList<UserData1> userList = <UserData1>[].obs;
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  RxList<String> ongoingChats = <String>[].obs;
+  late User currentUser;
 
   @override
   void onInit() {
     super.onInit();
-    fetchUserList();
-    initializeNotifications();
-    fetchCurrentUserRecentChats();
+    currentUser = _auth.currentUser!;
+    fetchOngoingChats();
   }
 
-  // Initialize local notifications
-  void initializeNotifications() async {
-    final AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    final InitializationSettings initializationSettings =
-    InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
-
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-
-  // Show a notification
-  Future<void> showNotification(String title, String body) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails(
-      'your channel id',
-      'your channel name',
-      importance: Importance.max,
-      priority: Priority.high,
-      showWhen: false,
-    );
-    const NotificationDetails platformChannelSpecifics =
-    NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      title,
-      body,
-      platformChannelSpecifics,
-      payload: 'item x',
-    );
-  }
-
-  Future<void> startChat(UserData1 otherUser) async {
+  void fetchOngoingChats() async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        // Create a new chat session or get an existing one
-        final chatId = await _getOrCreateChat(currentUser.uid, otherUser.uuid);
+      DocumentSnapshot userSnapshot =
+      await _firestore.collection('users').doc(currentUser.uid).get();
 
-        print("chatId $chatId");
-        // Navigate to the chat page with the chat ID
-        Get.toNamed('/chat', arguments: {
-          'chatId': chatId,
-          'name': otherUser.name,
-          'uuid': otherUser.uuid
-        });
+      // Print the data received from Firestore
+      print('User Snapshot Data: ${userSnapshot.data()}');
+
+      // Check if the 'ongoingChats' field exists in the document
+      Map<String, dynamic>? userData = userSnapshot.data() as Map<String, dynamic>?;
+
+      if (userData != null && userData.containsKey('ongoingChats')) {
+        // Access 'ongoingChats' field and assign to the list
+        List<String> ongoingChats = List<String>.from(userData['ongoingChats']);
+        this.ongoingChats.assignAll(ongoingChats);
+
+        // Print the ongoingChats list after assignment
+        print('Ongoing Chats: $ongoingChats');
+      } else {
+        // Handle the case where 'ongoingChats' field does not exist
+        print('Field "ongoingChats" does not exist within the DocumentSnapshot');
       }
     } catch (e) {
-      print('Failed to start chat: $e');
-    }
-  }
-
-  String getConversationID(String userID, String peerID) {
-    return userID.hashCode <= peerID.hashCode
-        ? '${userID}_$peerID'
-        : '${peerID}_$userID';
-  }
-
-  Future<String> _getOrCreateChat(String userId, String otherUserId) async {
-    final chatId = getConversationID(userId, otherUserId);
-
-    return chatId;
-  }
-
-  Future<void> fetchUserList() async {
-    try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-
-      if (currentUser != null) {
-        final users = await FirebaseFirestore.instance.collection('users').get();
-
-        userList.assignAll(users.docs.map<UserData1>((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          return UserData1(
-            name: data['name'] ?? 'Default Name',
-            uuid: data['uuid'] ?? '',
-            email: data['email'] ?? '',
-          );
-        }));
-
-        update();
-      }
-    } catch (e) {
-      print('Failed to fetch user list: $e');
-    }
-  }
-
-
-  Future<void> fetchCurrentUserRecentChats() async {
-    try {
-      final currentUser = _auth.currentUser;
-      final senderId = currentUser?.uid;
-
-      if (senderId != null) {
-        // Clear the userData list before fetching new data
-        userData.clear();
-
-        // Set loading state to true
-        isLoading.value = true;
-
-        // Fetch recent messages for the current user
-        final recentMessages = await _firestore
-            .collection('chats')
-            .where('members', arrayContains: senderId)
-            .get();
-
-        // Process each chat to get the latest message and user details
-        for (final doc in recentMessages.docs) {
-          final chatId = doc.id;
-          final members = doc['members'] as List<dynamic>;
-
-          if (members.isNotEmpty) {
-            final otherUserId = members.firstWhere(
-                  (member) => member != senderId,
-              orElse: () => null,
-            ) as String?;
-
-            if (otherUserId != null) {
-              final lastMessageSnapshot = await _firestore
-                  .collection('chats/$chatId/messages')
-                  .orderBy('timestamp', descending: true)
-                  .limit(1)
-                  .get();
-
-              if (lastMessageSnapshot.docs.isNotEmpty) {
-                final lastMessageData =
-                lastMessageSnapshot.docs.first.data() as Map<String, dynamic>;
-                final timestamp = lastMessageData['timestamp']?.toDate();
-                final lastMessageContent = lastMessageData['messageContent'] ?? '';
-
-                userData.add(UserDataWithLatestMessage(
-                  userData: UserData1(
-                    uuid: otherUserId,
-                    name: lastMessageData['senderName'],
-                    email: lastMessageData['senderEmail'],
-                  ),
-                  lastMessageContent: lastMessageContent,
-                  lastMessageTimestamp: timestamp,
-                ));
-              }
-            }
-          }
-        }
-
-        // Sort the user list based on the most recent message timestamp
-        userData.sort((a, b) =>
-            (b.lastMessageTimestamp ?? DateTime(0))
-                .compareTo(a.lastMessageTimestamp ?? DateTime(0)));
-
-        // Set loading state to false
-        isLoading.value = false;
-
-        // Print recent chats
-        printRecentChats();
-
-        // Trigger a UI update
-        update();
-      }
-    } catch (e) {
-      print('Failed to fetch recent chats: $e');
-      // Set loading state to false in case of an error
-      isLoading.value = false;
+      print('Error fetching ongoing chats: $e');
+      Get.snackbar('Error', 'Failed to fetch ongoing chats. Please try again.');
     }
   }
 
 
 
-  DateTime? getLastMessageTimestamp(String chatId, String userId) {
-    // Add your implementation here to fetch the last message timestamp
-    // using the provided chatId and userId.
-    // Return the timestamp as a DateTime object.
-
-    // For example, if you have a Firestore collection 'messages',
-    // you might fetch the last message like this:
-
-    // final lastMessage = await FirebaseFirestore.instance
-    //     .collection('chats/$chatId/messages')
-    //     .orderBy('timestamp', descending: true)
-    //     .limit(1)
-    //     .get();
-
-    // if (lastMessage.docs.isNotEmpty) {
-    //   final timestamp = lastMessage.docs.first['timestamp']?.toDate();
-    //   return timestamp;
-    // }
-
-    // Return null if there are no messages.
-    return null;
-  }
-
-  void printRecentChats() {
-    for (final chat in userData) {
-      print('Recent Chat:');
-      print('User Name: ${chat.userData.name ?? "N/A"}');
-      print('User Email: ${chat.userData.email ?? "N/A"}');
-      print('Last Message Content: ${chat.lastMessageContent ?? "N/A"}');
-      print('Last Message Timestamp: ${chat.lastMessageTimestamp ?? "N/A"}');
-      print('--------------------------');
-    }
-  }
 
 
-
-}
-
-class UserDataWithLatestMessage {
-  final UserData1 userData;
-  late final String lastMessageContent;
-  late final DateTime? lastMessageTimestamp;
-  // late final int messageCount;
-
-  UserDataWithLatestMessage({
-    required this.userData,
-    required this.lastMessageContent,
-    required this.lastMessageTimestamp,
-    // required this.messageCount,
-  });
 }

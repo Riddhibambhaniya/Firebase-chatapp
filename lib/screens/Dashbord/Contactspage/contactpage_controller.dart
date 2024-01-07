@@ -1,156 +1,101 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
 
-import '../../../models/contectpagemodel.dart';
-
+import '../chatpage/chatpage_controller.dart';
 
 class ContactController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final RxList<UserData1> userList = <UserData1>[].obs;
-  final RxList<UserData1> searchResults = <UserData1>[].obs;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  static const String userUuidKey = 'userUuid';
+  RxList<ContactModel> contacts = <ContactModel>[].obs;
+  late User currentUser;
+  RxList<String> ongoingChats = <String>[].obs;
+  late ChatPageController chatPageController; // Add ChatPageController
 
   @override
   void onInit() {
     super.onInit();
-    fetchUserList();
+    currentUser = _auth.currentUser!;
+    chatPageController = Get.put(ChatPageController()); // Initialize ChatPageController
+    loadContacts();
+    fetchOngoingChats(); // Call the method to fetch ongoing chats
   }
 
-  Future<void> fetchUserList() async {
+  void loadContacts() async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
+      QuerySnapshot usersSnapshot = await _firestore.collection('users').get();
 
-      if (currentUser != null) {
-        // Fetch the user list from Firestore
-        final users = await FirebaseFirestore.instance.collection('users').get();
-        print('Number of user documents: ${users.docs.length}');
+      List<ContactModel> loadedContacts = usersSnapshot.docs
+          .map((userDoc) => ContactModel.fromDocument(userDoc))
+          .where((contact) => contact.userId != currentUser.uid)
+          .toList();
 
-        // Clear the existing list before updating
-        userList.clear();
+      contacts.assignAll(loadedContacts);
+    } catch (e) {
+      print('Error loading contacts: $e');
+      // Handle the error, e.g., show a snackbar
+      Get.snackbar('Error', 'Failed to load contacts. Please try again.');
+    }
+  }
 
-        // Add all users to the contact list
-        users.docs.forEach((element) {
-          // Check if the required fields exist in the document
-          if (element.exists) {
-            String name = element.get("name") ?? 'Default Name';
-            String uuid = element.get("uuid") ?? '';
-            String email = element.get("email") ?? '';
-            // int phoneNumber = element.get("phonenumber") ?? 0;
+  Future<List<String>> fetchOngoingChatsFromFirestore() async {
+    try {
+      DocumentSnapshot userSnapshot =
+      await _firestore.collection('users').doc(currentUser.uid).get();
 
-            userList.add(UserData1(
-              name: name,
-              uuid: uuid,
-              email: email,
-              // phoneNumber: phoneNumber,
-            ));
-          }
-        });
+      if (userSnapshot.exists) {
+        var ongoingChatsData = userSnapshot.get('ongoingChats');
 
-        update(); // Trigger UI update
+        if (ongoingChatsData is List) {
+          List<String> ongoingChats = List<String>.from(ongoingChatsData);
+          return ongoingChats;
+        } else {
+          print('Invalid ongoingChats field: $ongoingChatsData');
+          return [];
+        }
+      } else {
+        print('User document does not exist.');
+        return [];
       }
     } catch (e) {
-      print('Failed to fetch user list: $e');
+      print('Error fetching ongoing chats: $e');
+      rethrow;
     }
   }
 
-
-
-
-
-
-
-  void search(String query) {
-    searchResults.clear();
-    if (query.isNotEmpty) {
-      searchResults.addAll(userList.where(
-            (user) => user.name.toLowerCase().contains(query.toLowerCase()),
-      ));
-    }
-  }
-
-  void clearSearch(TextEditingController searchController) {
-    searchResults.clear();
-    userList.clear();
-    update(); // Trigger UI update
-  }
-  Future<void> startChat(UserData1 otherUser) async {
+  void fetchOngoingChats() async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-
-      if (currentUser != null) {
-        // Create a new chat session or get an existing one
-        final chatId = await _getOrCreateChat(currentUser.uid, otherUser.uuid);
-
-        print("chatId $chatId");
-
-        // Update the 'chat_with' field for both users
-        await updateChatWith(currentUser.uid, otherUser.uuid, chatId);
-        await updateChatWith(otherUser.uuid, currentUser.uid, chatId);
-
-        // Navigate to the chat page with the chat ID
-        Get.toNamed('/chat', arguments: {
-          'chatId': chatId,
-          'name': otherUser.name,
-          'uuid': otherUser.uuid,
-        });
-      }
+      // Fetch the ongoing chats from your data source
+      List<String> ongoingChats = await fetchOngoingChatsFromFirestore();
+      // Update the ongoingChats list
+      this.ongoingChats.assignAll(ongoingChats);
     } catch (e) {
-      print('Failed to start chat: $e');
+      print('Error fetching ongoing chats: $e');
+      // Handle the error, e.g., show a snackbar
+      Get.snackbar('Error', 'Failed to fetch ongoing chats. Please try again.');
     }
   }
+}
 
-  Future<String> _getOrCreateChat(String userId, String otherUserId) async {
-    final chatId = getConversationID(userId, otherUserId);
+class ContactModel {
+  final String name;
+  final String userId;
 
-    // Check if the chat session already exists
-    final chatSnapshot =
-    await FirebaseFirestore.instance.collection('chats').doc(chatId).get();
+  ContactModel({
+    required this.name,
+    required this.userId,
+  });
 
-    if (!chatSnapshot.exists) {
-      // Create a new chat session
-      await FirebaseFirestore.instance.collection('chats').doc(chatId).set({
-        'members': [userId, otherUserId],
-        'created_at': FieldValue.serverTimestamp(),
-      });
-    }
+  factory ContactModel.fromDocument(QueryDocumentSnapshot document) {
+    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
 
-    return chatId; // Return the newly created or existing chat ID
+    String name = data['name'] ?? 'Unknown';
+    String userId = document.id;
+
+    return ContactModel(
+      name: name,
+      userId: userId,
+    );
   }
-
-  Future<void> updateChatWith(
-      String userId,
-      String otherUserId,
-      String chatId,
-      ) async {
-    try {
-      final userObj = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-      final userName = userObj['name'];
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection("chat_with")
-          .doc(otherUserId)
-          .set({
-        'recipientId': otherUserId,
-        'recipientName': userName,
-        'chatId': chatId,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      print('Failed to update chat_with: $e');
-    }
-  }
-
-  String getConversationID(String userID, String peerID) {
-    return userID.hashCode <= peerID.hashCode
-        ? '${userID}_$peerID'
-        : '${peerID}_$userID';
-  }
-
-
-
 }

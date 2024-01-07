@@ -63,9 +63,9 @@ class AppPages {
       page: () => MyProfileView(),
       binding: MyProfileBinding(),
     ),
-    GetPage(name: Routes.searchscreen,
-        page:()=> SearchScreen(),
-    ),
+    // GetPage(name: Routes.searchscreen,
+    //     page:()=> SearchScreen(),
+    // ),
     GetPage(
       name: Routes.Chatpage,
       page: () => ChatPage(),

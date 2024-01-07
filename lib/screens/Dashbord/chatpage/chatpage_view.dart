@@ -1,269 +1,112 @@
-
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:intl/intl.dart';
 
-import 'package:flutter/foundation.dart' as foundation;
-import '../../../models/chatmessage.dart';
-import '../../../routes/app_routes.dart';
-import '../../../styles/text_style.dart';
-import '../dashbord_view.dart';
 import 'chatpage_controller.dart';
-
-class ChatPage extends GetView<ChatController> {
+class ChatPage extends GetView<ChatPageController> {
   final TextEditingController _messageController = TextEditingController();
-  bool _todaySeparatorShown = false;
-  bool _yesterdaySeparatorShown = false;
-  final ChatController controller = Get.put(ChatController());
 
   @override
   Widget build(BuildContext context) {
-    final arguments = Get.arguments as Map<String, dynamic>;
-    final List<ChatMessage> chatMessages = arguments['chatMessages'] ?? [];
-    final Map<String, dynamic> chatDetails = arguments['chatDetails'];
-
-
-    final Map<String, dynamic>? userData = Get.arguments;
-    String? displayName = userData?['name'];
-    final String? senderId = FirebaseAuth.instance.currentUser?.uid;
-
-    final String firstLetter = displayName?[0]?.toUpperCase() ?? '';
-    controller.listenForMessages(userData?['uuid']);
-
-    bool isTodayMessage(ChatMessage message) {
-      return DateTime.now().year == message.timestamp.toDate().year &&
-          DateTime.now().month == message.timestamp.toDate().month &&
-          DateTime.now().day == message.timestamp.toDate().day;
-    }
-
-    bool isYesterdayMessage(ChatMessage message) {
-      DateTime yesterday = DateTime.now().subtract(Duration(days: 1));
-      return yesterday.year == message.timestamp.toDate().year &&
-          yesterday.month == message.timestamp.toDate().month &&
-          yesterday.day == message.timestamp.toDate().day;
-    }
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 20.0),
-          child: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () {
-              Get.to(() => Routes.home);
-            },
-          ),
-        ),
-        title: Row(
-          children: [
-            Column(
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.black,
-                      child: Text(
-                        firstLetter,
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 20.0),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayName ?? '',
-                          style: textBolds,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
+        title: Text('Chat with User'),
       ),
       body: Column(
-        children: <Widget>[
+        children: [
           Expanded(
-            child: Obx(() => ListView.builder(
-                  reverse: false,
-                  itemCount: controller.messages.length,
-                  itemBuilder: (context, index) {
-                    final reversedIndex =
-                        controller.messages.length - 1 - index;
-                    final message = controller.messages[reversedIndex];
-                    final isUserMessage = message.senderId == senderId;
-
-                    if (isTodayMessage(message) && !_todaySeparatorShown) {
-                      _todaySeparatorShown = true;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Center(
-                              child: Text(
-                                'Today',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 17,
-                                ),
-                              ),
-                            ),
-                          ),
-                          buildMessageWidget(message, senderId),
-                        ],
-                      );
-                    } else if (isYesterdayMessage(message) &&
-                        !_yesterdaySeparatorShown) {
-                      _yesterdaySeparatorShown = true;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Center(
-                              child: Text(
-                                'Yesterday',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 17,
-                                ),
-                              ),
-                            ),
-                          ),
-                          buildMessageWidget(message, senderId),
-                        ],
-                      );
-                    } else {
-                      return buildMessageWidget(message, senderId);
-                    }
-                  },
-                )),
+            child: Obx(
+                  () => controller.messages.isNotEmpty
+                  ? ListView.builder(
+                itemCount: controller.messages.length,
+                reverse: true,
+                itemBuilder: (context, index) {
+                  final message = controller.messages[index];
+                  return ChatMessageWidget(
+                    message: message,
+                    isSender: message.senderId == controller.currentUser.uid,
+                  );
+                },
+              )
+                  : Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
                 Expanded(
-                    child: TextField(
-                  controller: _messageController,
-                  decoration: InputDecoration(
-                    hintText: 'Type your message...',
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    filled: true,
-                    fillColor:
-                        Colors.white, // Adjust the background color as needed
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                      borderSide: BorderSide(
-                        color: Colors.grey, // Specify the border color
-                      ),
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: 'Type a message...',
                     ),
                   ),
-                )),
-                IconButton(
-                  icon: Icon(Icons.camera_alt),
-                  onPressed: () async {
-                    controller.pickImage(userData?['uuid']);
-                  },
                 ),
-
-
-
                 IconButton(
                   icon: Icon(Icons.send),
                   onPressed: () {
-                    controller.sendMessage(
-                      userData?['uuid'],
-                      _messageController.text,
-                      null,
-                    );
-                    final user = FirebaseAuth.instance.currentUser;
-                    final sentMessage = ChatMessage(
-                      senderId: senderId ?? '',
-                      recipientId: userData?['uuid'] ?? '',
-                      messageContent: _messageController.text,
-                      timestamp: Timestamp.now(),
-                      senderName: user?.displayName ?? 'You',
-                    );
-
-                    controller.messages.add(sentMessage);
+                    controller.sendMessage(_messageController.text);
                     _messageController.clear();
                   },
                 ),
-              ]),
+              ],
             ),
-          )
+          ),
         ],
       ),
     );
   }
+}
+class ChatMessageWidget extends StatelessWidget {
+  final MessageModel message;
+  final bool isSender;
 
-  Widget buildMessageWidget(ChatMessage message, String? senderId) {
-    String formattedTime = DateFormat.Hm().format(message.timestamp.toDate());
+  const ChatMessageWidget({
+    required this.message,
+    required this.isSender,
+    Key? key,
+  }) : super(key: key);
 
+  @override
+  Widget build(BuildContext context) {
     return Align(
-      alignment: message.senderId == senderId
-          ? Alignment.centerRight
-          : Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 15),
-        child: Container(
-          padding: EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: message.senderId == senderId
-                ? Color(0xFF20A090)
-                : Color(0xFFF2F7FB),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (message.imageUrl != null && message.imageUrl!.startsWith('http'))
-                Image.network(
-                  message.imageUrl!,
-                  width: 200,
-                  height: 200,
-                )
-              else
-                Text(
-                  message.messageContent,
-                  style: TextStyle(
-                    color: message.senderId == senderId
-                        ? Colors.white
-                        : Colors.black,
-                  ),
-                ),
-              SizedBox(height: 5),
-              Text(
-                '${message.senderName} • $formattedTime',
-                style: TextStyle(
-                  color: message.senderId == senderId
-                      ? Colors.white70
-                      : Colors.black54,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
+      alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+        padding: EdgeInsets.all(10.0),
+        decoration: BoxDecoration(
+          color: isSender ? Colors.blue : Colors.grey,
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message.text,
+              style: TextStyle(color: isSender ? Colors.white : Colors.black),
+            ),
+
+            SizedBox(height: 5.0),
+            Text(
+              _formatTimestamp(message.timestamp),
+              style: TextStyle(color: isSender ? Colors.white : Colors.black),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  String _formatTimestamp(Timestamp timestamp) {
+    // Convert the timestamp to a DateTime object
+    DateTime dateTime = timestamp.toDate();
 
+    // Format the DateTime object as a string (you can customize the format)
+    return DateFormat('HH:mm:ss ').format(dateTime);
+  }
 }
+
