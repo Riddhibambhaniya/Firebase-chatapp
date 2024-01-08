@@ -1,5 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:project_structure_with_getx/routes/app_pages.dart';
 import 'package:project_structure_with_getx/routes/app_routes.dart';
@@ -15,11 +17,51 @@ void main() async {
     projectId: 'messaging-chatbox',
         storageBucket: 'gs://messaging-chatbox.appspot.com',
 
+
   ));
+  FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
+
   Get.put<AuthController>(AuthController());
   runApp(const MyApp());
 }
 
+Future<void> _handleBackgroundMessage(RemoteMessage message) async {
+  print("Handling background message: $message");
+
+  _handleMessage(message.data);
+
+  if (message.notification != null) {
+    _showNotification(message.notification!);
+  }
+}
+
+void _handleMessage(Map<String, dynamic> data) {
+  print("Handling message: $data");
+
+  // Customize the logic based on the message data
+  // For example, you might want to update your UI, store the message, etc.
+}
+
+void _showNotification(RemoteNotification notification) async {
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  const AndroidNotificationDetails androidPlatformChannelSpecifics =
+  AndroidNotificationDetails(
+    'your_channel_id', 'your_channel_name',
+    importance: Importance.max,
+    priority: Priority.high,
+  );
+  const NotificationDetails platformChannelSpecifics =
+  NotificationDetails(android: androidPlatformChannelSpecifics);
+
+  await flutterLocalNotificationsPlugin.show(
+    0,
+    notification.title ?? 'Default Title',
+    notification.body ?? 'Default Body',
+    platformChannelSpecifics,
+  );
+}
 class MyApp extends StatelessWidget {
   const MyApp({Key? key});
 

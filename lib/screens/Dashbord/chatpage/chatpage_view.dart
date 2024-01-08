@@ -109,4 +109,3 @@ class ChatMessageWidget extends StatelessWidget {
     return DateFormat('HH:mm:ss ').format(dateTime);
   }
 }
-
