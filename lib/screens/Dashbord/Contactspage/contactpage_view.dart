@@ -56,8 +56,8 @@ class ContactPage extends GetView<ContactController> {
                           return ContactCard(
                             contact: controller.contacts[index],
                             onTap: () {
-                              String selectedUserId =
-                                  controller.contacts[index].userId;
+                              String selectedUserId = controller.contacts[index].userId;
+                              controller.addToOngoingChats(selectedUserId); // Add the user to ongoing chats
                               Get.to(() => ChatPage(),
                                   binding: BindingsBuilder(() {
                                     Get.put(ChatPageController())
@@ -106,7 +106,7 @@ class ContactCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        color: isInOngoingChats ? Colors.green : null, // Highlight ongoing chats
+        color: isInOngoingChats ? Colors.green : null,
         child: ListTile(
           title: Text(controller.contacts[index].name),
         ),
@@ -114,4 +114,3 @@ class ContactCard extends StatelessWidget {
     );
   }
 }
-

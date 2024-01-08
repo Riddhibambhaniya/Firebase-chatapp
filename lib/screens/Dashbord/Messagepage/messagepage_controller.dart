@@ -21,9 +21,6 @@ class MessageController extends GetxController {
       DocumentSnapshot userSnapshot =
       await _firestore.collection('users').doc(currentUser.uid).get();
 
-      // Print the data received from Firestore
-      print('User Snapshot Data: ${userSnapshot.data()}');
-
       // Check if the 'ongoingChats' field exists in the document
       Map<String, dynamic>? userData = userSnapshot.data() as Map<String, dynamic>?;
 
@@ -39,10 +36,11 @@ class MessageController extends GetxController {
         print('Field "ongoingChats" does not exist within the DocumentSnapshot');
       }
     } catch (e) {
-      print('Error fetching ongoing chats: $e');
+      // Handle the error, e.g., show a snackbar
       Get.snackbar('Error', 'Failed to fetch ongoing chats. Please try again.');
     }
   }
+
 
 
 

@@ -2,8 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
-import '../chatpage/chatpage_controller.dart';
-
 class ContactController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -11,15 +9,13 @@ class ContactController extends GetxController {
   RxList<ContactModel> contacts = <ContactModel>[].obs;
   late User currentUser;
   RxList<String> ongoingChats = <String>[].obs;
-  late ChatPageController chatPageController; // Add ChatPageController
 
   @override
   void onInit() {
     super.onInit();
     currentUser = _auth.currentUser!;
-    chatPageController = Get.put(ChatPageController()); // Initialize ChatPageController
     loadContacts();
-    fetchOngoingChats(); // Call the method to fetch ongoing chats
+    fetchOngoingChats();
   }
 
   void loadContacts() async {
@@ -34,47 +30,46 @@ class ContactController extends GetxController {
       contacts.assignAll(loadedContacts);
     } catch (e) {
       print('Error loading contacts: $e');
-      // Handle the error, e.g., show a snackbar
       Get.snackbar('Error', 'Failed to load contacts. Please try again.');
     }
   }
 
-  Future<List<String>> fetchOngoingChatsFromFirestore() async {
+  Future<void> fetchOngoingChats() async {
     try {
       DocumentSnapshot userSnapshot =
       await _firestore.collection('users').doc(currentUser.uid).get();
 
       if (userSnapshot.exists) {
-        var ongoingChatsData = userSnapshot.get('ongoingChats');
+        Map<String, dynamic>? userData =
+        userSnapshot.data() as Map<String, dynamic>?;
 
-        if (ongoingChatsData is List) {
-          List<String> ongoingChats = List<String>.from(ongoingChatsData);
-          return ongoingChats;
+        if (userData != null && userData.containsKey('ongoingChats')) {
+          List<String> ongoingChats =
+          List<String>.from(userData['ongoingChats']);
+          this.ongoingChats.assignAll(ongoingChats);
+          print('Ongoing Chats: $ongoingChats');
         } else {
-          print('Invalid ongoingChats field: $ongoingChatsData');
-          return [];
+          print('Field "ongoingChats" does not exist within the DocumentSnapshot');
+          this.ongoingChats.assignAll([]);
         }
       } else {
         print('User document does not exist.');
-        return [];
       }
     } catch (e) {
       print('Error fetching ongoing chats: $e');
-      rethrow;
+      Get.snackbar('Error', 'Failed to fetch ongoing chats. Please try again.');
     }
   }
 
-  void fetchOngoingChats() async {
-    try {
-      // Fetch the ongoing chats from your data source
-      List<String> ongoingChats = await fetchOngoingChatsFromFirestore();
-      // Update the ongoingChats list
-      this.ongoingChats.assignAll(ongoingChats);
-    } catch (e) {
-      print('Error fetching ongoing chats: $e');
-      // Handle the error, e.g., show a snackbar
-      Get.snackbar('Error', 'Failed to fetch ongoing chats. Please try again.');
-    }
+  void addToOngoingChats(String userId) {
+    ongoingChats.add(userId);
+    updateOngoingChatsInFirestore();
+  }
+
+  void updateOngoingChatsInFirestore() {
+    _firestore.collection('users').doc(currentUser.uid).update({
+      'ongoingChats': ongoingChats.toList(),
+    });
   }
 }
 
