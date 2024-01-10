@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../create_group/create_group_view.dart';
 import 'Contactspage/contactpage_view.dart';
 import 'Messagepage/mesagepage_view.dart';
 import 'dashbord_controller.dart';
@@ -16,6 +17,7 @@ class DashboardScreen extends GetView<DashboardController>{
           children: [
             MessagePage(),
             ContactPage(),
+            CreateGroupView(),
           ],
         ),
       ),
@@ -31,6 +33,10 @@ class DashboardScreen extends GetView<DashboardController>{
             BottomNavigationBarItem(
               icon: Icon(Icons.contact_phone),
               label: 'Contact',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_add_alt_1),
+              label: 'CreateGroup',
             ),
           ],
         ),

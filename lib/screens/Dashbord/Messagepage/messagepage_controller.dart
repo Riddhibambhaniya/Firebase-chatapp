@@ -40,10 +40,8 @@ class MessageController extends GetxController {
       Get.snackbar('Error', 'Failed to fetch ongoing chats. Please try again.');
     }
   }
-
-
-
-
-
-
 }
+
+
+
+

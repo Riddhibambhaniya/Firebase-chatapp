@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:project_structure_with_getx/screens/Dashbord/chatpage/chatpage_controller.dart';
 
 import '../chatpage/chatpage_view.dart';
 
 class ContactController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   RxList<ContactModel> contacts = <ContactModel>[].obs;
   late User currentUser;
@@ -17,13 +18,11 @@ class ContactController extends GetxController {
     super.onInit();
     currentUser = _auth.currentUser!;
     loadContacts();
-    fetchOngoingChats();
   }
 
   void loadContacts() async {
     try {
-      QuerySnapshot usersSnapshot =
-      await _firestore.collection('users').get();
+      QuerySnapshot usersSnapshot = await firestore.collection('users').get();
 
       List<ContactModel> loadedContacts = usersSnapshot.docs
           .map((userDoc) => ContactModel.fromDocument(userDoc))
@@ -37,77 +36,41 @@ class ContactController extends GetxController {
     }
   }
 
-  Future<void> fetchOngoingChats() async {
+  Future<void> addToOngoingChats(String selectedUserId) async {
     try {
-      DocumentSnapshot userSnapshot =
-      await _firestore.collection('users').doc(currentUser.uid).get();
-
-      if (userSnapshot.exists) {
-        Map<String, dynamic>? userData =
-        userSnapshot.data() as Map<String, dynamic>?;
-
-        if (userData != null && userData.containsKey('ongoingChats')) {
-          List<String> ongoingChats =
-          List<String>.from(userData['ongoingChats']);
-          this.ongoingChats.assignAll(ongoingChats);
-          print('Ongoing Chats: $ongoingChats');
-        } else {
-          print(
-              'Field "ongoingChats" does not exist within the DocumentSnapshot');
-          this.ongoingChats.assignAll([]);
-        }
-      } else {
-        print('User document does not exist.');
+      // Check if the user is not already in ongoingChats list
+      if (!ongoingChats.contains(selectedUserId)) {
+        await firestore
+            .collection('users')
+            .doc(currentUser.uid)
+            .update({
+          'ongoingChats': FieldValue.arrayUnion([selectedUserId]),
+        });
+        // ongoingChats.add(selectedUserId); // Add to local list
       }
     } catch (e) {
-      print('Error fetching ongoing chats: $e');
-      Get.snackbar(
-          'Error', 'Failed to fetch ongoing chats. Please try again.');
+      print('Error adding user to ongoing chats: $e');
     }
   }
 
-  void addToOngoingChats(String userId) {
-    ongoingChats.add(userId);
-    updateOngoingChatsInFirestore();
 
-    // Initialize messages when a chat starts
-    initializeMessages(userId);
-  }
+  void navigateToChat(String selectedUserId) {
+    // Check if the user is not already in ongoingChats list
+    if (!ongoingChats.contains(selectedUserId)) {
+      addToOngoingChats(selectedUserId);
+    }
 
-  void updateOngoingChatsInFirestore() {
-    _firestore.collection('users').doc(currentUser.uid).update({
-      'ongoingChats': ongoingChats.toList(),
-    });
-  }
-
-  void initializeMessages(String otherUserId) {
-    String chatId = generateChatId(currentUser.uid, otherUserId);
-
-    // Create a new chat room in Firestore
-    _firestore.collection('chats').doc(chatId).set({
-      'users': [currentUser.uid, otherUserId],
-      'created_at': FieldValue.serverTimestamp(),
-    });
-
-    // Optionally, you can add a welcome message or any other initialization logic
-    addMessage(chatId, 'Welcome to the chat!', currentUser.uid);
-  }
-
-  void addMessage(String chatId, String text, String senderId) {
-    // Add a new message to the chat room in Firestore
-    _firestore.collection('chats').doc(chatId).collection('messages').add({
-      'text': text,
-      'sender_id': senderId,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-  }
-
-  String generateChatId(String userId1, String userId2) {
-    // Sort the user IDs to create a consistent chat ID
-    List<String> sortedIds = [userId1, userId2]..sort();
-    return sortedIds.join('_');
+    Get.to(() => ChatPage(),
+        binding: BindingsBuilder(() {
+          Get.put(ChatPageController())
+            ..currentUser = currentUser
+            ..selectedUserId = RxString(selectedUserId)
+            ..loadMessages();
+        }));
   }
 }
+
+
 
 class ContactModel {
   final String name;

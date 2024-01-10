@@ -7,134 +7,113 @@ import '../chatpage/chatpage_controller.dart';
 import '../chatpage/chatpage_view.dart';
 import 'messagepage_controller.dart';
 
-class MessagePage extends GetView<MessageController> {
+class MessagePage extends StatelessWidget {
   final MessageController controller = Get.put(MessageController());
   final MyProfileController controllers = Get.put(MyProfileController());
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // App Bar
-          AppBar(
-            backgroundColor: Colors.black,
-            title: Center(
-              child: Text('Chats', style: TextStyle(color: Colors.white)),
-            ),
-            actions: [
-              GestureDetector(
-                onTap: () {
-                  Get.to(() => MyProfileView());
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 24.0),
-                  child: Obx(() {
-                    final userController = Get.find<MyProfileController>();
-                    final userProfilePic =
-                        userController.userProfilePic.value;
-                    final userName = userController.userName.value;
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: Center(
+          child: Text('Chats', style: TextStyle(color: Colors.white)),
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () {
+              Get.to(() => MyProfileView());
+            },
+            child: Obx(() {
+                final userController = Get.find<MyProfileController>();
+                final userProfilePic =
+                    userController.userProfilePic.value;
+                final userName = userController.userName.value;
 
-                    return CircleAvatar(
-                      radius: 25.0,
-                      backgroundColor: Colors.white,
-                      backgroundImage: userProfilePic.isNotEmpty
-                          ? AssetImage(userProfilePic)
-                          : null,
-                      child: userProfilePic.isEmpty
-                          ? Text(
-                        userName.isNotEmpty
-                            ? userName[0].toUpperCase()
-                            : '',
-                        style: TextStyle(
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      )
-                          : null,
-                    );
-                  }),
-                ),
-              ),
-            ],
-          ),
-
-          // Message List
-          Positioned(
-            top: 120.0,
-            left: 0,
-            right: 0,
-            child: Container( decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(30.0),
-                topRight: Radius.circular(30.0),
-              ),
-              color: Colors.white,
+                return CircleAvatar(
+                  radius: 25.0,
+                  backgroundColor: Colors.blue,
+                  backgroundImage: userProfilePic.isNotEmpty
+                      ? AssetImage(userProfilePic)
+                      : null,
+                  child: userProfilePic.isEmpty
+                      ? Text(
+                    userName.isNotEmpty
+                        ? userName[0].toUpperCase()
+                        : '',
+                    style: TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  )
+                      : null,
+                );
+              }),
             ),
-              width: 400,
-              height: 1000,
-              child: Obx(
-                    () => controller.ongoingChats.isNotEmpty
-                    ? ListView.builder(
-                  itemCount: controller.ongoingChats.length,
-                  itemBuilder: (context, index) {
-                    return MessageCard(
-                      userId: controller.ongoingChats[index],
-                    );
-                  },
-                )
-                    : Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
-    );
-  }
-}
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(controller.currentUser.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-class MessageCard extends StatelessWidget {
-  final String userId;
+          // Get the list of ongoing chats from the user document
+          List<dynamic> ongoingChats = snapshot.data!.get('ongoingChats') ?? [];
 
-  const MessageCard({
-    required this.userId,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // Navigate to chat screen with selected user
-        Get.to(() => ChatPage(), // Replace ChatPage with your actual chat page
-            binding: BindingsBuilder(() {
-              Get.put(ChatPageController())
-                ..selectedUserId = userId
-                ..loadMessages();
-            }));
-      },
-      child: Card(
-        child: ListTile(
-          title: FutureBuilder<DocumentSnapshot>(
-            future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
+          // Fetch user details for each ongoing chat
+          return FutureBuilder<QuerySnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('users')
+                .where(FieldPath.documentId, whereIn: ongoingChats)
+                .get(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              }
               if (!snapshot.hasData) {
-                return Text('Unknown User');
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
               }
 
-              String Name = snapshot.data!.get('name') ?? 'Unknown User';
+              List<DocumentSnapshot> users = snapshot.data!.docs;
+              List<Widget> messageCards = [];
 
-              return Text(Name);
+              for (var user in users) {
+                String name = user['name'];
+                String userId = user.id;
+
+                messageCards.add(
+                  GestureDetector(
+                    onTap: () {
+                      // Navigate to chat screen with selected user
+                      Get.to(() => ChatPage(),
+                          binding: BindingsBuilder(() {
+                            Get.put(ChatPageController())
+                              ..selectedUserId = RxString(userId)  // Use RxString here
+                              ..loadMessages();
+                          }));
+                    },
+                    child: Card(
+                      child: ListTile(
+                        title: Text(name),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return ListView(
+                children: messageCards,
+              );
             },
-          ),
-        ),
+          );
+        },
       ),
     );
   }

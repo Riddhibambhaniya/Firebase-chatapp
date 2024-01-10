@@ -49,8 +49,7 @@ class ContactPage extends GetView<ContactController> {
                   ),
                   Expanded(
                     child: Obx(
-                          () => controller.contacts.isNotEmpty
-                          ? ListView.builder(
+                          () => controller.contacts.isNotEmpty ? ListView.builder(
                         itemCount: controller.contacts.length,
                         itemBuilder: (context, index) {
                           return ContactCard(
@@ -60,10 +59,11 @@ class ContactPage extends GetView<ContactController> {
                               controller.addToOngoingChats(selectedUserId); // Add the user to ongoing chats
                               Get.to(() => ChatPage(),
                                   binding: BindingsBuilder(() {
-                                    Get.put(ChatPageController())
-                                      ..selectedUserId = selectedUserId
-                                      ..loadMessages();
-                                  }));
+                                    ChatPageController chatPageController = Get.put(ChatPageController());
+                                    chatPageController.selectedUserId.value = selectedUserId;
+                                    chatPageController.loadMessages();
+                                  })
+                              );
                             },
                             controller: controller,
                             index: index,

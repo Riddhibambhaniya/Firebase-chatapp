@@ -40,7 +40,7 @@ class ChatPage extends GetView<ChatPageController> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _messageController,
+                    controller: controller.messageController,
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
                     ),
@@ -49,8 +49,7 @@ class ChatPage extends GetView<ChatPageController> {
                 IconButton(
                   icon: Icon(Icons.send),
                   onPressed: () {
-                    controller.sendMessage(_messageController.text);
-                    _messageController.clear();
+                    controller.sendMessage();
                   },
                 ),
               ],
@@ -102,10 +101,7 @@ class ChatMessageWidget extends StatelessWidget {
   }
 
   String _formatTimestamp(Timestamp timestamp) {
-    // Convert the timestamp to a DateTime object
     DateTime dateTime = timestamp.toDate();
-
-    // Format the DateTime object as a string (you can customize the format)
     return DateFormat('HH:mm:ss ').format(dateTime);
   }
 }

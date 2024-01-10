@@ -66,11 +66,11 @@ class AppPages {
     // GetPage(name: Routes.searchscreen,
     //     page:()=> SearchScreen(),
     // ),
-    GetPage(
-      name: Routes.Chatpage,
-      page: () => ChatPage(),
-      binding: ChatBinding(),
-    ),
+    // GetPage(
+    //   name: Routes.Chatpage,
+    //   page: () => ChatPage (),
+    //   binding: ChatBinding(),
+    // ),
     GetPage(name: Routes.editprofileview,
         page: ()=> EditProfileView(),
         binding: MyProfileBinding())

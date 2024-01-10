@@ -1,131 +1,127 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
 class ChatPageController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String selectedUserId = '';
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  RxString selectedUserId = ''.obs;
+  RxString chatRoomId = ''.obs;
   RxList<MessageModel> messages = <MessageModel>[].obs;
   late User currentUser;
-
-
+  late TextEditingController messageController;
 
   @override
   void onInit() {
     super.onInit();
     currentUser = _auth.currentUser!;
+    selectedUserId = ''.obs;
+    messageController = TextEditingController();
+    // Make sure selectedUserId is set before calling loadMessages
+    chatRoomId.value = _chatRoomId();
+    loadMessages();
+    loadRecentChatMessages();
   }
 
-  Future<void> loadMessages() async {
-    try {
-      String chatRoomId = _chatRoomId();
-
-      // Retrieve the messages collection from Firestore
-      QuerySnapshot messagesSnapshot = await _firestore
+  void loadMessages() {
+    if (chatRoomId.isNotEmpty) {
+      firestore
           .collection('messages')
-          .doc(chatRoomId)
+          .doc(chatRoomId.value)
           .collection('messages')
           .orderBy('timestamp', descending: true)
-          .get();
+          .snapshots()
+          .listen((QuerySnapshot messagesSnapshot) {
+        List<MessageModel> loadedMessages = messagesSnapshot.docs
+            .map((messageDoc) => MessageModel.fromDocument(messageDoc))
+            .toList();
 
-      // Extract message information from the snapshot
+        messages.assignAll(loadedMessages);
+      });
+    }
+  }
+
+  void loadRecentChatMessages() {
+    firestore
+        .collection('messages')
+        .where('chatRoomId', isEqualTo: _recentChatRoomId())
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((QuerySnapshot messagesSnapshot) {
       List<MessageModel> loadedMessages = messagesSnapshot.docs
           .map((messageDoc) => MessageModel.fromDocument(messageDoc))
           .toList();
 
-      // Update the messages list
       messages.assignAll(loadedMessages);
-
-      // Print sender names for debugging
-      loadedMessages.forEach((message) {
-        print('Sender Name: ${message.senderName}');
-      });
-    } catch (e) {
-      print('Error loading messages: $e');
-    }
+    });
   }
 
-
   String _chatRoomId() {
-    List<String> userIds = [currentUser.uid, selectedUserId];
+    List<String> userIds = [currentUser.uid, selectedUserId.value];
     userIds.sort();
     return userIds.join('_');
   }
 
-  Future<void> sendMessage(String text) async {
+  String _recentChatRoomId() {
+    List<String> userIds = [currentUser.uid, selectedUserId.value];
+    userIds.sort();
+    return userIds.join('_');
+  }
+
+  void sendMessage() async {
     try {
-      String chatRoomId = _chatRoomId();
+      String text = messageController.text.trim();
 
-      // Fetch recipient's name
-      String recipientName = await getRecipientName(selectedUserId);
+      if (text.isNotEmpty) {
+        print('Sending message: $text');
 
-      await _firestore
-          .collection('messages')
-          .doc(chatRoomId)
-          .collection('messages')
-          .add({
-        'text': text,
-        'senderId': currentUser.uid,
-        'senderName': currentUser.displayName ?? '', // Use sender's display name
-        'recipientId': selectedUserId,
-        'recipientName': recipientName,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+        await firestore.collection('messages').add({
+          'text': text,
+          'senderId': currentUser.uid,
+          'timestamp': FieldValue.serverTimestamp(),
+          'chatRoomId': _recentChatRoomId(),
+        });
+
+        print('Message sent successfully');
+        messageController.clear();
+      }
     } catch (e) {
       print('Error sending message: $e');
     }
   }
-
-  Future<String> getRecipientName(String userId) async {
-    try {
-      DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-
-      // Fetch recipient's name from user data
-      return userData['name'] ?? '';
-    } catch (e) {
-      print('Error fetching recipient name: $e');
-      return '';
-    }
-  }
-
 }
 
 class MessageModel {
   final String text;
   final String senderId;
-  final String senderName;
-  final Timestamp timestamp; // Add timestamp property
+  final Timestamp timestamp;
 
   MessageModel({
     required this.text,
     required this.senderId,
-    required this.senderName,
     required this.timestamp,
   });
 
   factory MessageModel.fromDocument(QueryDocumentSnapshot document) {
-    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+    Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
 
-    // Add debug prints
-    print('Data from Firestore: $data');
+    if (data != null) {
+      String text = data['text'] ?? '';
+      String senderId = data['senderId'] ?? '';
+      Timestamp timestamp = data['timestamp'] as Timestamp? ?? Timestamp.now();
 
-    // Check for null values and provide default values if needed
-    String text = data['text'] ?? '';
-    String senderId = data['senderId'] ?? '';
-    String senderName = data['senderName'] ?? '';
-    Timestamp timestamp = data['timestamp'] ?? Timestamp.now(); // Provide a default timestamp
-
-    // Add more debug prints
-    print('Text: $text, SenderId: $senderId, SenderName: $senderName, Timestamp: $timestamp');
-
-    return MessageModel(
-      text: text,
-      senderId: senderId,
-      senderName: senderName,
-      timestamp: timestamp,
-    );
+      return MessageModel(
+        text: text,
+        senderId: senderId,
+        timestamp: timestamp,
+      );
+    } else {
+      return MessageModel(
+        text: 'Error: Message data is null',
+        senderId: '',
+        timestamp: Timestamp.now(),
+      );
+    }
   }
-
 }
