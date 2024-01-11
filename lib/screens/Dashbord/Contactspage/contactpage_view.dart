@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../chatpage/chatpage_controller.dart';
+import '../../create_group/create_group_view.dart';
 import '../chatpage/chatpage_view.dart';
 import 'contactpage_controller.dart';
 
@@ -58,11 +57,11 @@ class ContactPage extends GetView<ContactController> {
                               String selectedUserId = controller.contacts[index].userId;
                               controller.addToOngoingChats(selectedUserId); // Add the user to ongoing chats
                               Get.to(() => ChatPage(),
-                                  binding: BindingsBuilder(() {
-                                    ChatPageController chatPageController = Get.put(ChatPageController());
-                                    chatPageController.selectedUserId.value = selectedUserId;
-                                    chatPageController.loadMessages();
-                                  })
+                                  // binding: BindingsBuilder(() {
+                                  //   ChatPageController chatPageController = Get.put(ChatPageController());
+                                  //   chatPageController.selectedUserId.value = selectedUserId;
+                                  //   // chatPageController.loadMessages();
+                                  // })
                               );
                             },
                             controller: controller,
@@ -75,6 +74,15 @@ class ContactPage extends GetView<ContactController> {
                       ),
                     ),
                   ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Navigate to the create group page
+                      Get.to(() => CreateGroupPage());
+                    },
+                    child: Text('Create New Group'),
+                  ),
+
+
                 ],
               ),
             ),

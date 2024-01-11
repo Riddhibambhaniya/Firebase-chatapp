@@ -93,11 +93,12 @@ class MessagePage extends StatelessWidget {
                     onTap: () {
                       // Navigate to chat screen with selected user
                       Get.to(() => ChatPage(),
-                          binding: BindingsBuilder(() {
-                            Get.put(ChatPageController())
-                              ..selectedUserId = RxString(userId)  // Use RxString here
-                              ..loadMessages();
-                          }));
+                          // binding: BindingsBuilder(() {
+                          //   Get.put(ChatPageController())
+                          //     ..selectedUserId = RxString(userId)  // Use RxString here
+                          //     ..loadMessages();
+                          // })
+                      );
                     },
                     child: Card(
                       child: ListTile(

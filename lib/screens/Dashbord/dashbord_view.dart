@@ -17,7 +17,7 @@ class DashboardScreen extends GetView<DashboardController>{
           children: [
             MessagePage(),
             ContactPage(),
-            CreateGroupView(),
+
           ],
         ),
       ),
@@ -34,10 +34,7 @@ class DashboardScreen extends GetView<DashboardController>{
               icon: Icon(Icons.contact_phone),
               label: 'Contact',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_add_alt_1),
-              label: 'CreateGroup',
-            ),
+
           ],
         ),
       ),

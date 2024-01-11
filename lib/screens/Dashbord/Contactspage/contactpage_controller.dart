@@ -3,12 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:project_structure_with_getx/screens/Dashbord/chatpage/chatpage_controller.dart';
 
+import '../../groupchat/group_chat_page.dart';
 import '../chatpage/chatpage_view.dart';
 
 class ContactController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-
+  RxSet<String> selectedUsers = <String>{}.obs;
   RxList<ContactModel> contacts = <ContactModel>[].obs;
   late User currentUser;
   RxList<String> ongoingChats = <String>[].obs;
@@ -61,14 +62,41 @@ class ContactController extends GetxController {
     }
 
     Get.to(() => ChatPage(),
-        binding: BindingsBuilder(() {
-          Get.put(ChatPageController())
-            ..currentUser = currentUser
-            ..selectedUserId = RxString(selectedUserId)
-            ..loadMessages();
-        }));
+        // binding: BindingsBuilder(() {
+        //   Get.put(ChatPageController())
+        //     ..currentUser = currentUser
+        //     ..selectedUserId = RxString(selectedUserId)
+        //     ..loadMessages();
+        // })
+    );
   }
-}
+
+
+
+  void toggleUserSelection(String userId, bool isSelected) {
+    if (isSelected) {
+      selectedUsers.add(userId);
+    } else {
+      selectedUsers.remove(userId);
+    }
+  }
+
+  Future<void> createGroup() async {
+    try {
+      // Create the group in Firebase and store the selected users
+      // ...
+
+      // Navigate to the group chat page
+      Get.to(() => GroupChatPage());
+    } catch (e) {
+      print('Error creating group: $e');
+    }
+  }
+
+
+  }
+
+
 
 
 

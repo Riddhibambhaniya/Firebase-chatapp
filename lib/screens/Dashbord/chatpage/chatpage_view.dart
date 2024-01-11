@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'chatpage_controller.dart';
 class ChatPage extends GetView<ChatPageController> {
   final TextEditingController _messageController = TextEditingController();
-
+  final ChatPageController controller = Get.put(ChatPageController());
   @override
   Widget build(BuildContext context) {
     return Scaffold(

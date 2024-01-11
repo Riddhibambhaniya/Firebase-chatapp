@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
 class CreateGroupController extends GetxController {
-  // Your controller logic goes here
-}
+  RxSet<String> selectedUsers = <String>{}.obs;
+  late String groupChatId; // Group chat identifier
 
+
+}
