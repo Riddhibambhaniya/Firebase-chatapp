@@ -16,9 +16,7 @@ void main() async {
     messagingSenderId: '875664124972',
     projectId: 'messaging-chatbox',
         storageBucket: 'gs://messaging-chatbox.appspot.com',
-
-
-  ));
+      ));
   FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
 
   Get.put<AuthController>(AuthController());
@@ -37,9 +35,6 @@ Future<void> _handleBackgroundMessage(RemoteMessage message) async {
 
 void _handleMessage(Map<String, dynamic> data) {
   print("Handling message: $data");
-
-  // Customize the logic based on the message data
-  // For example, you might want to update your UI, store the message, etc.
 }
 
 void _showNotification(RemoteNotification notification) async {

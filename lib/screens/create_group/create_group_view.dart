@@ -2,41 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../Dashbord/Contactspage/contactpage_controller.dart';
-import 'create_group_controller.dart';
 
 
-class CreateGroupPage extends StatelessWidget {
+class CreateGroupPage extends GetView<ContactController> {
+  final ContactController controller = Get.find<ContactController>();
+
   @override
   Widget build(BuildContext context) {
-    final CreateGroupController createGroupController = Get.put(CreateGroupController());
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Create Group'),
       ),
-      body: GetBuilder<ContactController>(
-        builder: (contactController) {
-          return ListView.builder(
-            itemCount: contactController.contacts.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(contactController.contacts[index].name),
-                trailing: Checkbox(
-                  value: createGroupController.selectedUsers.contains(contactController.contacts[index].userId),
-                  onChanged: (isSelected) {
-                    createGroupController.toggleUserSelection(contactController.contacts[index].userId, isSelected!);
-                  },
-                ),
-              );
+      body: Column(
+        children: [
+          ElevatedButton(
+            onPressed: () {
+              // Create a group with selected users
+              controller.createGroup();
             },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          createGroupController.createGroup();
-        },
-        child: Icon(Icons.check),
+            child: Text('Create Group'),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: controller.contacts.length,
+              itemBuilder: (context, index) {
+                return CheckboxListTile(
+                  title: Text(controller.contacts[index].name),
+                  value: controller.selectedUsers.contains(controller.contacts[index].userId),
+                  onChanged: (value) {
+                    controller.toggleUserSelection(controller.contacts[index].userId, value ?? false);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

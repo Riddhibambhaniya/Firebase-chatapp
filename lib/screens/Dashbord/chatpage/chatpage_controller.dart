@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-
 class ChatPageController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -11,6 +12,7 @@ class ChatPageController extends GetxController {
   RxList<MessageModel> messages = <MessageModel>[].obs;
   late User currentUser;
   late TextEditingController messageController;
+  StreamSubscription<QuerySnapshot>? messagesSubscription;
 
   @override
   void onInit() {
@@ -24,9 +26,17 @@ class ChatPageController extends GetxController {
     loadRecentChatMessages();
   }
 
+  @override
+  void onClose() {
+    // Cancel the stream subscription to avoid memory leaks
+    messagesSubscription?.cancel();
+    super.onClose();
+  }
+
   void loadMessages() {
     if (chatRoomId.isNotEmpty) {
-      firestore
+      chatRoomId.refresh(); // Update chatRoomId before accessing its value
+      messagesSubscription = firestore
           .collection('messages')
           .doc(chatRoomId.value)
           .collection('messages')
@@ -38,6 +48,11 @@ class ChatPageController extends GetxController {
             .toList();
 
         messages.assignAll(loadedMessages);
+
+        // Print messages for debugging
+        for (var message in messages) {
+          print('Message: ${message.text}, Sender: ${message.senderId}');
+        }
       });
     }
   }
@@ -69,23 +84,21 @@ class ChatPageController extends GetxController {
     return userIds.join('_');
   }
 
-  void sendMessage() async {
+  Future<void> sendMessage(String text) async {
     try {
-      String text = messageController.text.trim();
+      String chatRoomId = _chatRoomId();
 
-      if (text.isNotEmpty) {
-        print('Sending message: $text');
-
-        await firestore.collection('messages').add({
-          'text': text,
-          'senderId': currentUser.uid,
-          'timestamp': FieldValue.serverTimestamp(),
-          'chatRoomId': _recentChatRoomId(),
-        });
-
-        print('Message sent successfully');
-        messageController.clear();
-      }
+      await firestore
+          .collection('messages')
+          .doc(chatRoomId)
+          .collection('messages')
+          .add({
+        'text': text,
+        'senderId': currentUser.uid,
+        'senderName': currentUser.displayName ?? '',
+        'recipientId': selectedUserId.value,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
     } catch (e) {
       print('Error sending message: $e');
     }

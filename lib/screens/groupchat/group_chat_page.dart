@@ -3,9 +3,14 @@ import 'package:get/get.dart';
 
 import 'groupchat_controller.dart';
 
-
 class GroupChatPage extends GetView<GroupChatController> {
   final GroupChatController controller = Get.put(GroupChatController());
+
+  GroupChatPage({required String groupId}) {
+    controller.groupId = groupId;
+    controller.loadMessages();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,9 +25,7 @@ class GroupChatPage extends GetView<GroupChatController> {
                 itemCount: controller.messages.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(controller.messages[index].text),
-                    subtitle: Text(controller.messages[index].senderId),
-                    // Add any other information you want to display for each message
+                    title: Text(controller.messages[index]),
                   );
                 },
               ),
@@ -34,17 +37,19 @@ class GroupChatPage extends GetView<GroupChatController> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: controller.messageController,
+                    controller: TextEditingController(),
                     decoration: InputDecoration(
-                      hintText: 'Type your message...',
+                      hintText: 'Type a message...',
                     ),
+                    onSubmitted: (message) {
+                      controller.sendMessage(message);
+                    },
                   ),
                 ),
                 IconButton(
                   icon: Icon(Icons.send),
                   onPressed: () {
-                    // Send the message
-                    controller.sendMessage();
+                    controller.sendMessage(controller.textEditingController.text);
                   },
                 ),
               ],

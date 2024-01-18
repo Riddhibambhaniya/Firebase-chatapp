@@ -71,6 +71,23 @@ class ContactController extends GetxController {
     );
   }
 
+  void createGroup() {
+    if (selectedUsers.isNotEmpty) {
+      // Create a new group in the database and get the group ID
+      String groupId = firestore.collection('groups').doc().id;
+
+      // Add selected users to the group members list
+      firestore.collection('groups').doc(groupId).set({
+        'members': selectedUsers.toList(),
+      });
+
+      // Navigate to the group page
+      Get.to(() => GroupChatPage(groupId: groupId));
+    } else {
+      Get.snackbar('Error', 'Please select at least one user to create a group.');
+    }
+  }
+
 
 
   void toggleUserSelection(String userId, bool isSelected) {
@@ -81,22 +98,10 @@ class ContactController extends GetxController {
     }
   }
 
-  Future<void> createGroup() async {
-    try {
-      // Create the group in Firebase and store the selected users
-      // ...
-
-      // Navigate to the group chat page
-      Get.to(() => GroupChatPage());
-    } catch (e) {
-      print('Error creating group: $e');
-    }
-  }
 
 
-  }
 
-
+}
 
 
 
